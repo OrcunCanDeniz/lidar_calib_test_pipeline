@@ -3,7 +3,6 @@
 void service(data_handler_srv::data_handler::Request &req
             data_handler_srv::data_handler::Response &res)
 {
-    
     if (directory_index_ != all_directories.size() + 1 )
     {
         ReadPCD(all_directories.at(directory_index_) + std::string("/lidar.pcd"));
@@ -12,8 +11,7 @@ void service(data_handler_srv::data_handler::Request &req
     } else {
         res.new_data_response = false;
         return;
-    }
-    
+    }   
 }
 
 void data_handler::ReadPCD(std::string in_file)
@@ -57,6 +55,11 @@ data_handler::data_handler(): directory_index_(0)
     }
 
     ros::Rate loop_rate(10);
+
+    pubs["parent"].reset(new ros::Publisher());
+    pubs["child"].reset(new ros::Publisher());
+    *pubs["parent"] = private_nh.advertise<sensor_msgs::PointCloud2>("/parent/pointcloud", 1); 
+    *pubs["child"] = private_nh.advertise<sensor_msgs::PointCloud2>("/child/pointcloud", 1); 
 
 
     all_directories = get_directories(pcd_image_input_dir_);
