@@ -1,0 +1,35 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/orcun/test_ws/devel/lib/python2.7/dist-packages",
+        "/home/orcun/Main.Drive/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/orcun/test_ws/devel/lib/python2.7/dist-packages",
+        "/home/orcun/Main.Drive/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages"
+    ],
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#f7bab0",
+        "activityBar.activeBorder": "#0f9121",
+        "activityBar.background": "#f7bab0",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#0f9121",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "editorGroup.border": "#f7bab0",
+        "panel.border": "#f7bab0",
+        "sash.hoverBorder": "#f7bab0",
+        "sideBar.border": "#f7bab0",
+        "statusBar.background": "#f29282",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#ed6a54",
+        "statusBarItem.remoteBackground": "#f29282",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#f29282",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#f2928299",
+        "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.color": "#f29282"
+}
