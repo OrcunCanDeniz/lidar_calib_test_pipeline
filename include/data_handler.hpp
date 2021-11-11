@@ -35,7 +35,7 @@ class data_handler
         
         void service(bool next_trigger);
         
-        void ReadPCD(std::string in_file);
+        void ReadScene(std::string in_file);
 
         void PublishPCD();
 

@@ -14,8 +14,17 @@ void service(data_handler_srv::data_handler::Request &req
     }   
 }
 
-void data_handler::ReadPCD(std::string in_file)
-{ 
+void data_handler::GetAgent(std::string agent_data_path)
+{
+    // input: path to agent dir which contains scene subdirs with data
+    // set extrinsics for agent
+    // get dirs of scenes agent's been to
+    
+
+}
+
+void data_handler::ReadScene(std::string in_file)
+{ /// get scene data
     //Create a PointCloud value
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZI>);
 
@@ -64,6 +73,4 @@ data_handler::data_handler(): directory_index_(0)
 
     all_directories = get_directories(pcd_image_input_dir_);
     std::sort(all_directories.begin(), all_directories.end());
-
-    points_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/lidar/parent/points_raw", 1);
 }
