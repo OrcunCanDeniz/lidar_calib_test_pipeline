@@ -21,9 +21,11 @@ class data_handler
         data_handler();
     
     private:
+        void setSubdirs(std::string parent_dir, bool is_dataset, int agent_idx=0)
+        
         ros::NodeHandle nh_;
         
-        std::string pcd_image_input_dir_;
+        std::string dataset_dir;
 
         std::vector<std::string> all_directories;
         int directory_index_;
@@ -38,6 +40,11 @@ class data_handler
         void ReadScene(std::string in_file);
 
         void PublishPCD();
+
+        std::vector<std::string> agent_dirs;
+        std::vector<std::vector<std::string>> scenes_of_agent;
+        int curr_agent_idx = 0;
+        int curr_scene_idx = 0;
 
         // subscribers
         std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs;

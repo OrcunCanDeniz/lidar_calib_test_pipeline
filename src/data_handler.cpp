@@ -14,14 +14,49 @@ void service(data_handler_srv::data_handler::Request &req
     }   
 }
 
-void data_handler::GetAgent(std::string agent_data_path)
+void data_handler::setSubdirs(std::string parent_dir, bool is_dataset, int agent_idx=0)
 {
-    // input: path to agent dir which contains scene subdirs with data
-    // set extrinsics for agent
-    // get dirs of scenes agent's been to
-    
-
+    for(auto& subdir : fs::directory_iterator(parent_dir))
+    {
+        if (std::experimental::filesystem::is_directory(subdir))
+        {
+            if (is_dataset) // subdirs are agents
+            {
+                agent_dirs.push_back(subdir.path().string());
+            } else {
+                if (scenes_of_agent.size() == agent_idx) 
+                {
+                    std::vector<std::string> tmp;
+                    scenes_of_agent.push_back(tmp);
+                }
+                scenes_of_agent[agent_idx].push_back(subdir.path().string());
+            }
+        }
+    }
 }
+
+bool data_handler::findPcd() //return true when all dataset is processed 
+{
+    // TODO !!!! !!!! read pcds from scenes_of_agent[curr_agent_idx][curr_scene_idx]; 
+    // std::cout<<scenes_of_agent[curr_agent_idx][curr_scene_idx]<<std::endl;
+
+    if (curr_scene_idx < scenes_of_agent.size())
+    {
+        curr_scene_idx++;
+    } else {
+        if( curr_agent_idx < scenes_of_agent.size()-1)
+        {
+            curr_agent_idx++;
+            curr_scene_idx = 0;
+        } else {
+            std::cout<< "ALL DONE"<<std::endl;
+            return true;
+        }
+    }
+    return false;
+}
+
+// add extrinsic parser
 
 void data_handler::ReadScene(std::string in_file)
 { /// get scene data
@@ -56,12 +91,21 @@ data_handler::data_handler(): directory_index_(0)
 {
     ros::NodeHandle private_nh("~");
     const std::string HOME = getenv("HOME");
-    private_nh.param<std::string>("pcd_image_input_dir", pcd_image_input_dir_, HOME + "/dataset/");
+    private_nh.param<std::string>("dataset_dir", dataset_dir, HOME + "/dataset/");
     
-    if (!IsPathExist(pcd_image_input_dir_))
+    if (!IsPathExist(dataset_dir))
     {
-        ROS_ERROR_STREAM("Failed to find directory: " << pcd_image_input_dir_);
+        ROS_ERROR_STREAM("Failed to find directory: " << dataset_dir);
     }
+
+    //cache dirs of agents and scenes belonging to them
+    setSubdirs(s, true); // get Agents
+    int agent_idx = 0;
+    for(auto& agent : agent_dirs)
+    {
+      setSubdirs(agent,false,agent_idx);
+      agent_idx++;  
+    } 
 
     ros::Rate loop_rate(10);
 
