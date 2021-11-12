@@ -12,41 +12,47 @@
 
 #include <experimental/filesystem>
 #include <sys/stat.h>
+#include <std_srvs/SetBool.h>
 
 
-class data_handler
+namespace data_provider
 {
+    class data_handler
+    {
 
-    public:
-        data_handler();
-    
-    private:
-        void setSubdirs(std::string parent_dir, bool is_dataset, int agent_idx=0)
+        public:
+            data_handler();
         
-        ros::NodeHandle nh_;
-        
-        std::string dataset_dir;
+        private:
+            void setSubdirs(std::string parent_dir, bool is_dataset, int agent_idx);
+            void ReadScene(std::string in_file);
+            bool IsPathExist(const std::string &s);
+            bool getPcdDir();
+            bool serve(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse &res);
+            // std::vector<std::string> get_directories(const std::string& s);
+            std::string getFileName(std::string file_path);
 
-        std::vector<std::string> all_directories;
-        int directory_index_;
-        bool all_processed;
 
-        ros::Time current_time_;
+            ros::NodeHandle nh_;
+            
+            std::string dataset_dir;
 
-        sensor_msgs::PointCloud2 parent_msg;
-        
-        void service(bool next_trigger);
-        
-        void ReadScene(std::string in_file);
+            std::vector<std::string> all_directories;
+            int directory_index_;
+            bool all_processed;
 
-        void PublishPCD();
+            ros::Time current_time_;
 
-        std::vector<std::string> agent_dirs;
-        std::vector<std::vector<std::string>> scenes_of_agent;
-        int curr_agent_idx = 0;
-        int curr_scene_idx = 0;
+            sensor_msgs::PointCloud2 parent_msg;
+            
+            std::vector<std::string> agent_dirs;
+            std::vector<std::vector<std::string>> scenes_of_agent;
+            int curr_agent_idx = 0;
+            int curr_scene_idx = 0;
 
-        // subscribers
-        std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs;
+            // subscribers
+            std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs_map_;
+            std::map<std::string, pcl::PointCloud<pcl::PointXYZI>::Ptr> pointclouds_map_;
 
-};
+    };
+} //namespace
