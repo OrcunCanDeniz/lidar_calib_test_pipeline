@@ -52,6 +52,8 @@ namespace data_provider
 
             // subscribers
             std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs_map_;
+            ros::ServiceServer service;
+            
             std::map<std::string, pcl::PointCloud<pcl::PointXYZI>::Ptr> pointclouds_map_;
 
     };

@@ -6,4 +6,6 @@ int main(int argc, char** argv)
     data_provider::data_handler app;
 
     ros::spin();
+
+    return 0;
 }

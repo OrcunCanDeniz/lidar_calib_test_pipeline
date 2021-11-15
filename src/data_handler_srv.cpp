@@ -116,6 +116,7 @@ namespace data_provider
     data_handler::data_handler(): directory_index_(0)
     {
         ros::NodeHandle private_nh("~");
+        // ROS_INFO("Running data handler.");
         const std::string HOME = getenv("HOME");
         private_nh.param<std::string>("dataset_dir", dataset_dir, HOME + "/test_ws/src/data_handler_srv/dummy_dataset/");
         
@@ -140,11 +141,10 @@ namespace data_provider
         *pubs_map_["parent"] = private_nh.advertise<sensor_msgs::PointCloud2>("/parent/pointcloud", 1); 
         *pubs_map_["child"] = private_nh.advertise<sensor_msgs::PointCloud2>("/child/pointcloud", 1); 
 
-
         // all_directories = get_directories(pcd_image_input_dir_);
         // std::sort(all_directories.begin(), all_directories.end());
 
-        ros::ServiceServer service = private_nh.advertiseService("provide_pc_data", &data_handler::serve, this);
+        service = private_nh.advertiseService("provide_pc_data", &data_handler::serve, this);
 
     }
 } //namespace
