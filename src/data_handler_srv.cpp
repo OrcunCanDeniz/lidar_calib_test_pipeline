@@ -4,34 +4,31 @@
 
 namespace data_provider
 {
-    namespace fs = std::experimental::filesystem; 
+    namespace fs = std::experimental::filesystem;
 
     bool data_handler::serve(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse &res)
-    // TODO: CHECK THIS FUNCTION 
     {
-        if (progress_in_scene <= pcd_pairs.size()-1) // if all pcd pairs is not published for the current scene 
-        {
-            res.success = true;
-            res.message = "Published PCD pair.";
-        } else { // if all pcd pairs from the current scene are published
+        if (progress_in_scene > pcd_pairs.size()-1) // if all pcd pairs is not published for the current scene 
+        {   
+            ROS_INFO("Trying to cache scene...");
             if (!cacheScene()) // cache new scene 
             {
                 res.success = false;
                 res.message = "End of dataset !";
+                throw std::runtime_error("End of dataset !");
                 return false;
-<<<<<<< HEAD
             } else { // if unprocessed data still exists
                 // TODO: create pcd pair
+                createPcdPairs();
                 progress_in_scene = 0;
-=======
->>>>>>> parent of 5a9c478... fixed bug in processed data tracking
             }
-            // TODO: create pcd pair
-            progress_in_scene = 0;
         }
-        //TODO:publish pcd pair
-        ROS_INFO_STREAM("Agent idx: " << curr_agent_idx << " Scene idx: " << curr_scene_idx);
-        ROS_INFO_STREAM("Progress in scene " << progress_in_scene );
+
+        res.success = true;
+        res.message = "Published PCD pair.";
+        //TODO: publish pcd pair using progress_in_scene variable 
+        // ROS_INFO_STREAM("Agent idx: " << curr_agent_idx << " Scene idx: " << curr_scene_idx);
+        ROS_INFO_STREAM("Progress: " << progress_in_scene );
         progress_in_scene ++;
         return true;
     }
@@ -62,9 +59,8 @@ namespace data_provider
         std::vector<std::string> files_in_scene;
         for(auto& scene_file: fs::directory_iterator(scene_dir))
         {
-            if(!fs::is_directory(scene_file) && IsPathExist(scene_file.path().string()))files_in_scene.push_back(scene_file.path().string());
+            if(!fs::is_directory(scene_file) && IsPathExist(scene_file.path().string())) files_in_scene.push_back(scene_file.path().string());
         }
-
         //Create a PointCloud value
         pcl::PointCloud<pcl::PointXYZI>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZI>);
         
@@ -75,9 +71,11 @@ namespace data_provider
             {
                 PCL_ERROR("Couldn't read in_file\n");
             } else {
+                pcds_in_scene.push_back(in_file);
                 std::string pc_name = getFileName(in_file);
                 pointclouds_map_[pc_name].reset(new pcl::PointCloud<pcl::PointXYZI>);
                 pcl::copyPointCloud(*cloud, *pointclouds_map_[pc_name]);
+                ROS_WARN_STREAM("Read, " << in_file);
             }
         }
     }
@@ -85,28 +83,41 @@ namespace data_provider
     bool data_handler::cacheScene() 
     {
         //cache scene data from disk, set the next scene to be cached
-        //return true when all dataset is processed 
+        //return false when all dataset is processed 
+        if (is_last_scene) return false;
+        
+        std::cout<< "agent "<< curr_agent_idx << ", scene "<< curr_scene_idx << std::endl;
         ReadScene(scenes_of_agent[curr_agent_idx][curr_scene_idx]); // cache scene data 
-
-        if (curr_scene_idx < scenes_of_agent.size()) // update the directory to be cached in the next call
+        
+        if (curr_scene_idx < scenes_of_agent[curr_agent_idx].size()-1) // update the directory to be cached in the next call
         {
             curr_scene_idx++;
         } else {
-            if( curr_agent_idx < scenes_of_agent.size()-1)
+            if( curr_agent_idx < scenes_of_agent.size() -1)
             {
                 curr_agent_idx++;
                 curr_scene_idx = 0;
-            } else {
-                std::cout<< "ALL DONE"<<std::endl;
-                return false;
+            } else { // dont let the idx to increase but raise flag that shows no more data left
+                is_last_scene = true;
             }
         }
         return true;
     }
 
-    // bool data_handler::createPcdPairs(); // TODO:create non_repeating pairs of pcd from current scene
+    void data_handler::createPcdPairs() 
+    {
+        // create non repeating pairs from pcds in an individual scene
+        for (int i=0; i<pcds_in_scene.size(); i++)
+        {
+            int tmp = i;
+            for (j=i+1; j<pcds_in_scene.size(); j++)
+            {
+                pcd_pairs.push_back(std::make_pair(pcds_in_scene[tmp],pcds_in_scene[j]);
+            }
+        } 
+    }
     
-    // add extrinsic parser
+    // TODO: add extrinsic parser
 
     std::string data_handler::getFileName(std::string file_path)
     {
@@ -131,10 +142,9 @@ namespace data_provider
     //     return r;
     // }
 
-    data_handler::data_handler(): progress_in_scene(0)
+    data_handler::data_handler(): progress_in_scene(2147483647), is_last_scene(false)
     {
         ros::NodeHandle private_nh("~");
-        // ROS_INFO("Running data handler.");
         const std::string HOME = getenv("HOME");
         private_nh.param<std::string>("dataset_dir", dataset_dir, HOME + "/test_ws/src/data_handler_srv/dummy_dataset/");
         
@@ -148,23 +158,21 @@ namespace data_provider
         int agent_idx = 0;
         for(auto& agent : agent_dirs)
         {
-        setSubdirs(agent,false,agent_idx);
-        agent_idx++;  
+            setSubdirs(agent,false,agent_idx);
+            agent_idx++;
         } 
 
-        ros::Rate loop_rate(10);
+        pcd_pairs.resize(2); // dummy size for test, change accordingly in the future
 
-        pcd_pairs.resize(3); // dummy size for test, change accordingly in the future
-
+        // cacheScene();
         pubs_map_["parent"].reset(new ros::Publisher());
         pubs_map_["child"].reset(new ros::Publisher());
         *pubs_map_["parent"] = private_nh.advertise<sensor_msgs::PointCloud2>("/parent/pointcloud", 1); 
         *pubs_map_["child"] = private_nh.advertise<sensor_msgs::PointCloud2>("/child/pointcloud", 1); 
 
-        // all_directories = get_directories(pcd_image_input_dir_);
-        // std::sort(all_directories.begin(), all_directories.end());
-
         service = private_nh.advertiseService("provide_pc_data", &data_handler::serve, this);
 
+        // all_directories = get_directories(pcd_image_input_dir_);
+        // std::sort(all_directories.begin(), all_directories.end());
     }
 } //namespace
