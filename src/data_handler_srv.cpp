@@ -18,7 +18,6 @@ namespace data_provider
                 throw std::runtime_error("End of dataset !");
                 return false;
             } else { // if unprocessed data still exists
-                // TODO: create pcd pair
                 createPcdPairs();
                 progress_in_scene = 0;
             }
