@@ -19,6 +19,7 @@ namespace data_provider
                 return false;
             } else { // if unprocessed data still exists
                 // TODO: create pcd pair
+                createPcdPairs();
                 progress_in_scene = 0;
             }
         }
@@ -70,6 +71,7 @@ namespace data_provider
             {
                 PCL_ERROR("Couldn't read in_file\n");
             } else {
+                pcds_in_scene.push_back(in_file);
                 std::string pc_name = getFileName(in_file);
                 pointclouds_map_[pc_name].reset(new pcl::PointCloud<pcl::PointXYZI>);
                 pcl::copyPointCloud(*cloud, *pointclouds_map_[pc_name]);
@@ -102,7 +104,18 @@ namespace data_provider
         return true;
     }
 
-    // bool data_handler::createPcdPairs(); // TODO:create non_repeating pairs of pcd from current scene
+    void data_handler::createPcdPairs() 
+    {
+        // create non repeating pairs from pcds in an individual scene
+        for (int i=0; i<pcds_in_scene.size(); i++)
+        {
+            int tmp = i;
+            for (j=i+1; j<pcds_in_scene.size(); j++)
+            {
+                pcd_pairs.push_back(std::make_pair(pcds_in_scene[tmp],pcds_in_scene[j]);
+            }
+        } 
+    }
     
     // TODO: add extrinsic parser
 
