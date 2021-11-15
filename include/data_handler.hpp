@@ -27,10 +27,11 @@ namespace data_provider
             void setSubdirs(std::string parent_dir, bool is_dataset, int agent_idx);
             void ReadScene(std::string in_file);
             bool IsPathExist(const std::string &s);
-            bool getPcdDir();
+            bool cacheScene();
             bool serve(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse &res);
-            // std::vector<std::string> get_directories(const std::string& s);
+            // bool data_handler::createPcdPairs();
             std::string getFileName(std::string file_path);
+            // std::vector<std::string> get_directories(const std::string& s);
 
 
             ros::NodeHandle nh_;
@@ -38,7 +39,7 @@ namespace data_provider
             std::string dataset_dir;
 
             std::vector<std::string> all_directories;
-            int directory_index_;
+            int progress_in_scene;
             bool all_processed;
 
             ros::Time current_time_;
@@ -56,5 +57,6 @@ namespace data_provider
             
             std::map<std::string, pcl::PointCloud<pcl::PointXYZI>::Ptr> pointclouds_map_;
 
+            std::vector<std::pair<std::string, std::string>> pcd_pairs; 
     };
 } //namespace

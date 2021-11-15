@@ -6,19 +6,28 @@ namespace data_provider
 {
     namespace fs = std::experimental::filesystem; 
 
-    // TODO: CHECK THIS FUNCTION 
     bool data_handler::serve(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse &res)
+    // TODO: CHECK THIS FUNCTION 
     {
-        if (directory_index_ != all_directories.size() + 1 )
+        if (progress_in_scene <= pcd_pairs.size()-1) // if all pcd pairs is not published for the current scene 
         {
-            // ReadPCD(all_directories.at(directory_index_) + std::string("/lidar.pcd"));
             res.success = true;
-            directory_index_ ++;
-            return true;
-        } else {
-            res.success = false;
-            return false;
-        }   
+            res.message = "Published PCD pair.";
+        } else { // if all pcd pairs from the current scene are published
+            if (!cacheScene()) // cache new scene 
+            {
+                res.success = false;
+                res.message = "End of dataset !";
+                return false;
+            }
+            // TODO: create pcd pair
+            progress_in_scene = 0;
+        }
+        //TODO:publish pcd pair
+        ROS_INFO_STREAM("Agent idx: " << curr_agent_idx << " Scene idx: " << curr_scene_idx);
+        ROS_INFO_STREAM("Progress in scene " << progress_in_scene );
+        progress_in_scene ++;
+        return true;
     }
 
     void data_handler::setSubdirs(std::string parent_dir, bool is_dataset, int agent_idx=0)
@@ -67,12 +76,13 @@ namespace data_provider
         }
     }
 
-    bool data_handler::getPcdDir() //return true when all dataset is processed 
+    bool data_handler::cacheScene() 
     {
+        //cache scene data from disk, set the next scene to be cached
+        //return true when all dataset is processed 
+        ReadScene(scenes_of_agent[curr_agent_idx][curr_scene_idx]); // cache scene data 
 
-        ReadScene(scenes_of_agent[curr_agent_idx][curr_scene_idx]);
-
-        if (curr_scene_idx < scenes_of_agent.size())
+        if (curr_scene_idx < scenes_of_agent.size()) // update the directory to be cached in the next call
         {
             curr_scene_idx++;
         } else {
@@ -82,12 +92,14 @@ namespace data_provider
                 curr_scene_idx = 0;
             } else {
                 std::cout<< "ALL DONE"<<std::endl;
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
+    // bool data_handler::createPcdPairs(); // TODO:create non_repeating pairs of pcd from current scene
+    
     // add extrinsic parser
 
     std::string data_handler::getFileName(std::string file_path)
@@ -113,7 +125,7 @@ namespace data_provider
     //     return r;
     // }
 
-    data_handler::data_handler(): directory_index_(0)
+    data_handler::data_handler(): progress_in_scene(0)
     {
         ros::NodeHandle private_nh("~");
         // ROS_INFO("Running data handler.");
@@ -135,6 +147,8 @@ namespace data_provider
         } 
 
         ros::Rate loop_rate(10);
+
+        pcd_pairs.resize(3); // dummy size for test, change accordingly in the future
 
         pubs_map_["parent"].reset(new ros::Publisher());
         pubs_map_["child"].reset(new ros::Publisher());
