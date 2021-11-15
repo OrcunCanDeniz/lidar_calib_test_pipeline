@@ -29,7 +29,7 @@ namespace data_provider
             bool IsPathExist(const std::string &s);
             bool cacheScene();
             bool serve(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse &res);
-            void createPcdPairs();
+            // bool data_handler::createPcdPairs();
             std::string getFileName(std::string file_path);
             // std::vector<std::string> get_directories(const std::string& s);
 
@@ -55,6 +55,5 @@ namespace data_provider
             std::map<std::string, pcl::PointCloud<pcl::PointXYZI>::Ptr> pointclouds_map_;
 
             std::vector<std::pair<std::string, std::string>> pcd_pairs; 
-            std::vector<std::string> pcds_in_scene;
     };
 } //namespace
