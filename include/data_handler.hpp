@@ -33,23 +33,20 @@ namespace data_provider
             std::string getFileName(std::string file_path);
             // std::vector<std::string> get_directories(const std::string& s);
 
-
             ros::NodeHandle nh_;
             
             std::string dataset_dir;
 
             std::vector<std::string> all_directories;
             int progress_in_scene;
-            bool all_processed;
 
             ros::Time current_time_;
 
-            sensor_msgs::PointCloud2 parent_msg;
-            
             std::vector<std::string> agent_dirs;
             std::vector<std::vector<std::string>> scenes_of_agent;
             int curr_agent_idx = 0;
             int curr_scene_idx = 0;
+            bool is_last_scene;
 
             // subscribers
             std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs_map_;
