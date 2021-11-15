@@ -26,7 +26,6 @@ namespace data_provider
         res.success = true;
         res.message = "Published PCD pair.";
         //TODO: publish pcd pair using progress_in_scene variable 
-        // ROS_INFO_STREAM("Agent idx: " << curr_agent_idx << " Scene idx: " << curr_scene_idx);
         ROS_INFO_STREAM("Progress: " << progress_in_scene );
         progress_in_scene ++;
         return true;
@@ -132,15 +131,6 @@ namespace data_provider
         return (stat (s.c_str(), &buffer) == 0);
     }
 
-    // std::vector<std::string> data_handler::get_directories(const std::string& s)
-    // {
-    //     std::vector<std::string> r;
-    //     for(auto& p : fs::recursive_directory_iterator(s))
-    //         if (fs::is_directory(p))
-    //             r.push_back(p.path().string());
-    //     return r;
-    // }
-
     data_handler::data_handler(): progress_in_scene(2147483647), is_last_scene(false)
     {
         ros::NodeHandle private_nh("~");
@@ -163,15 +153,11 @@ namespace data_provider
 
         pcd_pairs.resize(2); // dummy size for test, change accordingly in the future
 
-        // cacheScene();
         pubs_map_["parent"].reset(new ros::Publisher());
         pubs_map_["child"].reset(new ros::Publisher());
         *pubs_map_["parent"] = private_nh.advertise<sensor_msgs::PointCloud2>("/parent/pointcloud", 1); 
         *pubs_map_["child"] = private_nh.advertise<sensor_msgs::PointCloud2>("/child/pointcloud", 1); 
 
         service = private_nh.advertiseService("provide_pc_data", &data_handler::serve, this);
-
-        // all_directories = get_directories(pcd_image_input_dir_);
-        // std::sort(all_directories.begin(), all_directories.end());
     }
 } //namespace
