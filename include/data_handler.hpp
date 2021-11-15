@@ -30,8 +30,9 @@ namespace data_provider
             bool cacheScene();
             bool serve(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse &res);
             void createPcdPairs();
+            void publishPcds();
             std::string getFileName(std::string file_path);
-            // std::vector<std::string> get_directories(const std::string& s);
+
 
             ros::NodeHandle nh_;
             
@@ -47,6 +48,8 @@ namespace data_provider
             int curr_agent_idx = 0;
             int curr_scene_idx = 0;
             bool is_last_scene;
+
+            sensor_msgs::PointCloud2 parent_msg, child_msg;
 
             // subscribers
             std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs_map_;

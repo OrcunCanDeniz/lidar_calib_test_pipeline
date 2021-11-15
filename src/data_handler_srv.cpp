@@ -26,6 +26,7 @@ namespace data_provider
         res.success = true;
         res.message = "Published PCD pair.";
         //TODO: publish pcd pair using progress_in_scene variable 
+        publishPcds(pcd_pairs[progress_in_scene].first, pcd_pairs[progress_in_scene].second);
         ROS_INFO_STREAM("Progress: " << progress_in_scene );
         progress_in_scene ++;
         return true;
@@ -69,8 +70,8 @@ namespace data_provider
             {
                 PCL_ERROR("Couldn't read in_file\n");
             } else {
-                pcds_in_scene.push_back(in_file);
                 std::string pc_name = getFileName(in_file);
+                pcds_in_scene.push_back(pc_name);
                 pointclouds_map_[pc_name].reset(new pcl::PointCloud<pcl::PointXYZI>);
                 pcl::copyPointCloud(*cloud, *pointclouds_map_[pc_name]);
                 ROS_WARN_STREAM("Read, " << in_file);
@@ -113,6 +114,16 @@ namespace data_provider
                 pcd_pairs.push_back(std::make_pair(pcds_in_scene[tmp],pcds_in_scene[j]);
             }
         } 
+    }
+
+    void data_handler::publishPcds(std::string parent_name, std::string child_name)
+    { 
+        pcl::toROSMsg(*pointclouds_map_[parent_name], parent_msg);
+        pcl::toROSMsg(*pointclouds_map_[child_name], child_msg);
+        parent_msg.header.frame_id = parent_name;
+        child_msg.header.frame_id = child_name;  /// PCD NAMES MUST BE SAME WITH THEIR FRAME_ID
+        pubs_map_["parent"]->publish(parent_msg);
+        pubs_map_["child"]->publish(child_msg);
     }
     
     // TODO: add extrinsic parser
