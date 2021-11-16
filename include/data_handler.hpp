@@ -30,7 +30,7 @@ namespace data_provider
             bool cacheScene();
             bool serve(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse &res);
             void createPcdPairs();
-            void publishPcds();
+            void publishPcds(std::string parent_name, std::string child_name);
             std::string getFileName(std::string file_path);
 
 
@@ -55,7 +55,7 @@ namespace data_provider
             std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs_map_;
             ros::ServiceServer service;
             
-            std::map<std::string, pcl::PointCloud<pcl::PointXYZI>::Ptr> pointclouds_map_;
+            std::map<std::string, std::shared_ptr<pcl::PointCloud<pcl::PointXYZ>>> pointclouds_map_;
 
             std::vector<std::pair<std::string, std::string>> pcd_pairs; 
             std::vector<std::string> pcds_in_scene;

@@ -8,7 +8,7 @@ namespace data_provider
 
     bool data_handler::serve(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse &res)
     {
-        if (progress_in_scene > pcd_pairs.size()-1) // if all pcd pairs is not published for the current scene 
+        if (progress_in_scene+1 > pcd_pairs.size()) // if all pcd pairs is not published for the current scene 
         {   
             ROS_INFO("Trying to cache scene...");
             if (!cacheScene()) // cache new scene 
@@ -21,13 +21,12 @@ namespace data_provider
                 createPcdPairs();
                 progress_in_scene = 0;
             }
-        }
+        }        
 
         res.success = true;
         res.message = "Published PCD pair.";
-        //TODO: publish pcd pair using progress_in_scene variable 
         publishPcds(pcd_pairs[progress_in_scene].first, pcd_pairs[progress_in_scene].second);
-        ROS_INFO_STREAM("Progress: " << progress_in_scene );
+        ROS_INFO_STREAM(progress_in_scene+1 << ". PCD pair" );
         progress_in_scene ++;
         return true;
     }
@@ -55,24 +54,25 @@ namespace data_provider
 
     void data_handler::ReadScene(std::string scene_dir)
     {   /// input: path to scene dir
+        pcds_in_scene.clear();
         std::vector<std::string> files_in_scene;
         for(auto& scene_file: fs::directory_iterator(scene_dir))
         {
             if(!fs::is_directory(scene_file) && IsPathExist(scene_file.path().string())) files_in_scene.push_back(scene_file.path().string());
         }
         //Create a PointCloud value
-        pcl::PointCloud<pcl::PointXYZI>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
         
         for(auto& in_file: files_in_scene)
         {
             //Open the PCD file
-            if (pcl::io::loadPCDFile<pcl::PointXYZI> (in_file, *cloud) == -1) 
+            if (pcl::io::loadPCDFile<pcl::PointXYZ> (in_file, *cloud) == -1) 
             {
                 PCL_ERROR("Couldn't read in_file\n");
             } else {
                 std::string pc_name = getFileName(in_file);
                 pcds_in_scene.push_back(pc_name);
-                pointclouds_map_[pc_name].reset(new pcl::PointCloud<pcl::PointXYZI>);
+                pointclouds_map_[pc_name].reset(new pcl::PointCloud<pcl::PointXYZ>);
                 pcl::copyPointCloud(*cloud, *pointclouds_map_[pc_name]);
                 ROS_WARN_STREAM("Read, " << in_file);
             }
@@ -85,7 +85,7 @@ namespace data_provider
         //return false when all dataset is processed 
         if (is_last_scene) return false;
         
-        std::cout<< "agent "<< curr_agent_idx << ", scene "<< curr_scene_idx << std::endl;
+        std::cout<< "Caching agent "<< curr_agent_idx << ", scene "<< curr_scene_idx << std::endl;
         ReadScene(scenes_of_agent[curr_agent_idx][curr_scene_idx]); // cache scene data 
         
         if (curr_scene_idx < scenes_of_agent[curr_agent_idx].size()-1) // update the directory to be cached in the next call
@@ -105,19 +105,21 @@ namespace data_provider
 
     void data_handler::createPcdPairs() 
     {
+        pcd_pairs.clear();
         // create non repeating pairs from pcds in an individual scene
         for (int i=0; i<pcds_in_scene.size(); i++)
         {
-            int tmp = i;
-            for (j=i+1; j<pcds_in_scene.size(); j++)
+            for (int j=i+1; j<pcds_in_scene.size(); j++)
             {
-                pcd_pairs.push_back(std::make_pair(pcds_in_scene[tmp],pcds_in_scene[j]);
+                pcd_pairs.push_back(std::make_pair(pcds_in_scene[i], pcds_in_scene[j]));
             }
         } 
+        std::cout<<"[createPcdPairs] Number of PCD combinations: "<<pcd_pairs.size()<<std::endl;
     }
 
     void data_handler::publishPcds(std::string parent_name, std::string child_name)
     { 
+        std::cout<<"[publishPcds] Publishing parent_frame "<< parent_name << ", child "<< child_name <<std::endl;
         pcl::toROSMsg(*pointclouds_map_[parent_name], parent_msg);
         pcl::toROSMsg(*pointclouds_map_[child_name], child_msg);
         parent_msg.header.frame_id = parent_name;
@@ -161,8 +163,6 @@ namespace data_provider
             setSubdirs(agent,false,agent_idx);
             agent_idx++;
         } 
-
-        pcd_pairs.resize(2); // dummy size for test, change accordingly in the future
 
         pubs_map_["parent"].reset(new ros::Publisher());
         pubs_map_["child"].reset(new ros::Publisher());
