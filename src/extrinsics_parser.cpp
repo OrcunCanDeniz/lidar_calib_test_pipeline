@@ -15,7 +15,7 @@ namespace data_provider
         extrinsics_manager::extrinsics_manager(std::vector<std::string> agent_paths): all_agents{agent_paths}, agent_idx{0}, last_set_processed{false} 
         {
             // input: vector<string> : paths to agents 
-            ROS_INFO_STREAM(module_name << "Agent paths: ");
+            if (DEBUG) ROS_INFO_STREAM(module_name << "Agent paths: ");
             for(int i=0 ; i<all_agents.size() ; i++)
             {
                 if (fs::exists(all_agents[i]))
@@ -23,7 +23,7 @@ namespace data_provider
                     if ( fs::exists(all_agents[i] + "extrinsics/") ) 
                     {
                         all_agents[i] += "extrinsics/";
-                        ROS_INFO_STREAM(module_name << "- " << all_agents[i]);
+                        if (DEBUG) ROS_INFO_STREAM(module_name << "- " << all_agents[i]);
                     } else {
                         ROS_WARN_STREAM(module_name << all_agents[i] << " does not have extrinsics folder !");
                         all_agents.erase(all_agents.begin()+i);
@@ -36,6 +36,7 @@ namespace data_provider
         }
 
         void extrinsics_manager::parseYAML(std::string tf_yaml_path)
+        // read yaml file and convert data inside to tf transform
         {
             YAML::Node raw_extrinsics;
             std::string parent_frame_id, child_frame_id;
@@ -47,6 +48,7 @@ namespace data_provider
                 return;
             }
 
+            // get parent and child frame ids
             parent_frame_id = raw_extrinsics["parent_frame_id"].as<std::string>();
             child_frame_id = raw_extrinsics["child_frame_id"].as<std::string>();
             
@@ -60,30 +62,36 @@ namespace data_provider
                                 raw_extrinsics["rotation"]["z"].as<float>(),
                                 raw_extrinsics["rotation"]["w"].as<float>() );
             
-            ROS_INFO_STREAM(module_name << "Parent frame: "<< parent_frame_id);
-            ROS_INFO_STREAM(module_name << "Child frame: "<< child_frame_id );
-           
+            if (DEBUG)
+            {
+                ROS_INFO_STREAM(module_name << "Parent frame: "<< parent_frame_id);
+                ROS_INFO_STREAM(module_name << "Child frame: "<< child_frame_id );
+            }
+
             tf::Transform transform(q, t);
-            broadcastTF(transform, parent_frame_id, child_frame_id );
+            transforms_cache.push_back(tf::StampedTransform(transform, ros::Time::now(), parent_frame_id, child_frame_id));
         }
 
-        void extrinsics_manager::broadcastTF(tf::Transform transform, std::string parent_frame, std::string child_frame)
+        void extrinsics_manager::broadcastTFs()
+        //publish cached transforms
         {
             static tf::TransformBroadcaster br;
-            std::cout<< "kaljdşakjs"<< std::endl;
-
-            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "fdsdsf"));
+            for (auto& transform: transforms_cache)
+            {
+                br.sendTransform(transform);
+            }
         }
 
         bool extrinsics_manager::next()
+        // read yaml files from disk and convert them to tf::transform
+        // return true if there is still data left to process, otherwise false 
         {
-            ROS_INFO_STREAM(module_name << all_agents[agent_idx]);
-            // get next set of extrinsics  
+            if (DEBUG) ROS_INFO_STREAM(module_name << all_agents[agent_idx]);
+            transforms_cache.clear(); // clear tf data from another agent
             for(auto& subdir : fs::directory_iterator(all_agents[agent_idx]))
             {
                 if (fs::path(subdir).extension() == ".yaml")
                 {
-                    // ROS_INFO_STREAM(module_name << "    Parsing " << subdir); 
                     parseYAML(subdir.path().string());
                 } else {
                     ROS_WARN_STREAM(module_name << "    " << subdir << " does not exist !");
@@ -97,10 +105,12 @@ namespace data_provider
 
 
         bool extrinsics_manager::updateIdx()
+        // safely update idx pointing to the agent that will be processed
+        // return false if idx is already reached the limit, true if it still can be incremented 
         {
-            if (agent_idx<=(int)all_agents.size()-1 && !last_set_processed)
+            if (agent_idx<=(int)all_agents.size()-1 && !last_set_processed) // if idx is still less than max idx and unprocessed data still exists 
             {   
-                if (agent_idx==(int)all_agents.size()-1) 
+                if (agent_idx==(int)all_agents.size()-1) // if last set of data is processed
                 {
                     last_set_processed=true;
                     return false;
@@ -117,20 +127,22 @@ namespace data_provider
 }
 
 
-int main(int argc, char **argv)
-{
-    std::vector<std::string> agent_dirs{"/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_0/",
-                                        "/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_1/",
-                                        "/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_2/"};
-    data_provider::extrinsics::extrinsics_manager Manager(agent_dirs);
-    bool stat(true);
+// int main(int argc, char **argv)
+// {
+//     ros::init(argc, argv, "ext_provider_node");
+//     std::vector<std::string> agent_dirs{"/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_0/",
+//                                         "/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_1/",
+//                                         "/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_2/"};
+//     data_provider::extrinsics::extrinsics_manager Manager(agent_dirs);
+//     bool stat(true);
+//     ros::Time::init();
 
-    ros::init(argc, argv, "ext_provider_node");
+//     stat = Manager.next(); 
 
-
-    while (stat)
-    { 
-      stat = Manager.next(); 
-    }
-    return 0;
-}
+//     while (ros::ok)
+//     {
+//     Manager.broadcastTFs();
+//     ros::spinOnce();
+//     }
+//     return 0;
+// }

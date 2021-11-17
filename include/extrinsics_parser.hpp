@@ -5,6 +5,8 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 
+
+#define DEBUG 1
 namespace data_provider
 {
     namespace extrinsics
@@ -15,7 +17,7 @@ namespace data_provider
                 extrinsics_manager(std::vector<std::string> agent_paths);
                 extrinsics_manager();
                 void parseYAML(std::string tf_name);
-                void broadcastTF(tf::Transform transform, std::string parent_frame, std::string child_frame);
+                void broadcastTFs();
                 bool next();
                 bool updateIdx();
             
@@ -23,8 +25,7 @@ namespace data_provider
                 std::vector<std::string> all_agents;
                 int agent_idx;
                 bool last_set_processed;
-                std::vector<std::string> translation_fields;
-                std::vector<std::string> rotation_fields;
+                std::vector<tf::StampedTransform> transforms_cache;
                 const std::string module_name = "[EXTRINSICS PARSER] ";
 
         };

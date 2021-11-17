@@ -133,6 +133,10 @@ add_library(${PROJECT_NAME}
   src/data_handler_srv.cpp
 )
 
+add_library(extrinsic_lib
+  src/extrinsics_parser.cpp
+)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -141,7 +145,7 @@ add_library(${PROJECT_NAME}
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/data_handler_srv_node.cpp)
-add_executable(test_ext src/extrinsics_parser.cpp)
+# add_executable(test_ext src/extrinsics_parser.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,15 +161,17 @@ add_executable(test_ext src/extrinsics_parser.cpp)
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
+  extrinsic_lib
   ${PCL_LIBRARIES}
   stdc++fs
+  yaml-cpp
 )
-target_link_libraries( test_ext
-                      ${catkin_LIBRARIES}
-                      ${PROJECT_NAME} 
-                      yaml-cpp
-                      stdc++fs
-                      )
+# target_link_libraries( test_ext
+#                       ${catkin_LIBRARIES}
+#                       ${PROJECT_NAME} 
+#                       yaml-cpp
+#                       stdc++fs
+#                       )
 
 add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 #############
