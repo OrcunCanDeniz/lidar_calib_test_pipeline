@@ -33,7 +33,6 @@ namespace data_provider
             void publishPcds(std::string parent_name, std::string child_name);
             std::string getFileName(std::string file_path);
 
-
             ros::NodeHandle nh_;
             
             std::string dataset_dir;

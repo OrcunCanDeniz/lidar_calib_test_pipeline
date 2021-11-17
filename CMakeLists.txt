@@ -16,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
+find_package(yaml-cpp REQUIRED)
+
 find_package(PCL 1.7 REQUIRED common io visualization )
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -139,6 +141,7 @@ add_library(${PROJECT_NAME}
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/data_handler_srv_node.cpp)
+add_executable(test_ext src/extrinsics_parser.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,6 +160,12 @@ target_link_libraries(${PROJECT_NAME}_node
   ${PCL_LIBRARIES}
   stdc++fs
 )
+target_link_libraries( test_ext
+                      ${catkin_LIBRARIES}
+                      ${PROJECT_NAME} 
+                      yaml-cpp
+                      stdc++fs
+                      )
 
 add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 #############
