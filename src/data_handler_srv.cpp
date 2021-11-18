@@ -35,7 +35,7 @@ namespace data_provider
     {
         for(auto& subdir : fs::directory_iterator(parent_dir))
         {
-            if (fs::is_directory(subdir))
+            if (fs::is_directory(subdir) && subdir.path().filename() != "extrinsics")
             {
                 if (is_dataset) // if subdirs are agents
                 {
@@ -68,7 +68,7 @@ namespace data_provider
             //Open the PCD file
             if (pcl::io::loadPCDFile<pcl::PointXYZ> (in_file, *cloud) == -1) 
             {
-                PCL_ERROR("Couldn't read in_file\n");
+                PCL_ERROR("Couldn't read file \n");
             } else {
                 std::string pc_name = getFileName(in_file);
                 pcds_in_scene.push_back(pc_name);
@@ -92,9 +92,11 @@ namespace data_provider
         {
             curr_scene_idx++;
         } else {
-            if( curr_agent_idx < scenes_of_agent.size() -1)
+            if( curr_agent_idx < (int)scenes_of_agent.size() -1)
             {
                 curr_agent_idx++;
+                extManager.next(); // set of extrinsics to manager for next agent
+                ROS_INFO_STREAM(module_name << "CACHED NEW TF");
                 curr_scene_idx = 0;
             } else { // dont let the idx to increase but raise flag that shows no more data left
                 is_last_scene = true;
@@ -128,7 +130,6 @@ namespace data_provider
         pubs_map_["child"]->publish(child_msg);
     }
     
-    // TODO: add extrinsic parser
 
     std::string data_handler::getFileName(std::string file_path)
     {
@@ -163,12 +164,17 @@ namespace data_provider
             setSubdirs(agent,false,agent_idx);
             agent_idx++;
         } 
+        extManager.setPaths(agent_dirs);
 
+        extManager.next(); //load first set of extrinsics to manager
+
+        timer = nh_.createTimer(ros::Duration(0.1), &extrinsics_manager::broadcastTFs, &extManager);
         pubs_map_["parent"].reset(new ros::Publisher());
         pubs_map_["child"].reset(new ros::Publisher());
         *pubs_map_["parent"] = private_nh.advertise<sensor_msgs::PointCloud2>("/parent/pointcloud", 1); 
         *pubs_map_["child"] = private_nh.advertise<sensor_msgs::PointCloud2>("/child/pointcloud", 1); 
 
         service = private_nh.advertiseService("provide_pc_data", &data_handler::serve, this);
+        ROS_INFO_STREAM(module_name << "Ready for data requests");
     }
 } //namespace

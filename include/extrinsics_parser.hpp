@@ -12,15 +12,15 @@ namespace data_provider
     class extrinsics_manager
     {
         public:
-            extrinsics_manager(std::vector<std::string> agent_paths);
             extrinsics_manager();
             void parseYAML(std::string tf_name);
-            void broadcastTFs();
+            void broadcastTFs(const ros::TimerEvent&);
             bool next();
             bool updateIdx();
-        
+            void setPaths(std::vector<std::string> agent_paths);
         private:
             std::vector<std::string> all_agents;
+            bool paths_ready;
             int agent_idx;
             bool last_set_processed;
             std::vector<tf::StampedTransform> transforms_cache;

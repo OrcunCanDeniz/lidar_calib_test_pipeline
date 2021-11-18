@@ -6,23 +6,29 @@ namespace data_provider
 
     namespace fs = std::experimental::filesystem;
 
-    extrinsics_manager::extrinsics_manager()
+    extrinsics_manager::extrinsics_manager():paths_ready(0),agent_idx{0}, last_set_processed{false}
     {
-        ROS_ERROR("No paths provided for extrinsic parameters !");
+        ROS_WARN("No paths provided for extrinsic parameters !");
     }
 
-    extrinsics_manager::extrinsics_manager(std::vector<std::string> agent_paths): all_agents{agent_paths}, agent_idx{0}, last_set_processed{false} 
+    // extrinsics_manager::extrinsics_manager(std::vector<std::string> agent_paths): all_agents{agent_paths}, agent_idx{0}, last_set_processed{false} 
+    // {
+         
+    // }
+
+    void extrinsics_manager::setPaths(std::vector<std::string> agent_paths)
+    // input: vector<string> : paths to agents 
     {
-        // input: vector<string> : paths to agents 
+        all_agents = agent_paths;
         if (DEBUG) ROS_INFO_STREAM(module_name << "Agent paths: ");
         for(int i=0 ; i<all_agents.size() ; i++)
         {
             if (fs::exists(all_agents[i]))
             {
-                if ( fs::exists(all_agents[i] + "extrinsics/") ) 
+                if ( fs::exists(all_agents[i] + "/extrinsics/") ) 
                 {
-                    all_agents[i] += "extrinsics/";
-                    if (DEBUG) ROS_INFO_STREAM(module_name << "- " << all_agents[i]);
+                    all_agents[i] += "/extrinsics/";
+                    if (DEBUG) ROS_INFO_STREAM(module_name << "  - " << all_agents[i]);
                 } else {
                     ROS_WARN_STREAM(module_name << all_agents[i] << " does not have extrinsics folder !");
                     all_agents.erase(all_agents.begin()+i);
@@ -31,7 +37,9 @@ namespace data_provider
                 ROS_WARN_STREAM(module_name << all_agents[i] << " does not exist !");
                 all_agents.erase(all_agents.begin()+i);
             }
-        }            
+        }   
+
+        paths_ready = true;
     }
 
     void extrinsics_manager::parseYAML(std::string tf_yaml_path)
@@ -71,7 +79,8 @@ namespace data_provider
         transforms_cache.push_back(tf::StampedTransform(transform, ros::Time::now(), parent_frame_id, child_frame_id));
     }
 
-    void extrinsics_manager::broadcastTFs()
+    void extrinsics_manager::broadcastTFs(const ros::TimerEvent&)
+    //used as a timer callback
     //publish cached transforms
     {
         static tf::TransformBroadcaster br;
@@ -85,8 +94,12 @@ namespace data_provider
     // read yaml files from disk and convert them to tf::transform
     // return true if there is still data left to process, otherwise false 
     {
-        if (DEBUG) ROS_INFO_STREAM(module_name << all_agents[agent_idx]);
+        if (!paths_ready) ROS_ERROR("NO CALIBRATION FILES KNOWN TO EXTRINSICS MANAGER !");
+
+        if (DEBUG) ROS_INFO_STREAM(module_name << "######### GOING FOR NEXT AGENT'S CALIBRATIONS ########");
+        if (DEBUG) ROS_INFO_STREAM(module_name << "Caching -> " << all_agents[agent_idx]);
         transforms_cache.clear(); // clear tf data from another agent
+
         for(auto& subdir : fs::directory_iterator(all_agents[agent_idx]))
         {
             if (fs::path(subdir).extension() == ".yaml")
@@ -98,6 +111,7 @@ namespace data_provider
         }
 
         bool one_more_iter = updateIdx();
+        if (DEBUG) ROS_INFO_STREAM(module_name << "######################################################");
 
         return one_more_iter;
     }
@@ -123,24 +137,3 @@ namespace data_provider
         }
     }
 }
-
-
-// int main(int argc, char **argv)
-// {
-//     ros::init(argc, argv, "ext_provider_node");
-//     std::vector<std::string> agent_dirs{"/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_0/",
-//                                         "/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_1/",
-//                                         "/home/orcun/test_ws/src/data_handler_srv/dummy_dataset/agent_2/"};
-//     data_provider::extrinsics::extrinsics_manager Manager(agent_dirs);
-//     bool stat(true);
-//     ros::Time::init();
-
-//     stat = Manager.next(); 
-
-//     while (ros::ok)
-//     {
-//     Manager.broadcastTFs();
-//     ros::spinOnce();
-//     }
-//     return 0;
-// }
