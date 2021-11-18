@@ -2,7 +2,7 @@
 <package format="2">
   <name>data_handler_srv</name>
   <version>0.0.0</version>
-  <description>The data_handler_srv package</description>
+  <description>A node that will publish a pair of PointCloud messages on call. While broadcasting TF between those Pointcloud.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

@@ -11,11 +11,6 @@ namespace data_provider
         ROS_WARN("No paths provided for extrinsic parameters !");
     }
 
-    // extrinsics_manager::extrinsics_manager(std::vector<std::string> agent_paths): all_agents{agent_paths}, agent_idx{0}, last_set_processed{false} 
-    // {
-         
-    // }
-
     void extrinsics_manager::setPaths(std::vector<std::string> agent_paths)
     // input: vector<string> : paths to agents 
     {

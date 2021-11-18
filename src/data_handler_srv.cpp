@@ -131,7 +131,7 @@ namespace data_provider
     }
     
 
-    std::string data_handler::getFileName(std::string file_path)
+    std::string data_handler::getFileName(std::string file_path) // TODO: use fs::path::filename() https://en.cppreference.com/w/cpp/filesystem/path/filename
     {
         std::string base_filename = file_path.substr(file_path.find_last_of("/\\") + 1);
         std::string::size_type const p(base_filename.find_last_of('.'));
@@ -139,7 +139,7 @@ namespace data_provider
         return file_without_extension;
     }
 
-    bool data_handler::IsPathExist(const std::string &s)
+    bool data_handler::IsPathExist(const std::string &s) // TODO: use fs::exists() instead
     {
         struct stat buffer;
         return (stat (s.c_str(), &buffer) == 0);
