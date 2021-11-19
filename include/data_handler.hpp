@@ -54,6 +54,11 @@ namespace data_provider
             std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs_map_;
             ros::ServiceServer service;
             
+            extrinsics_manager extManager;
+            ros::Timer timer;
+
+            const std::string module_name = "DATA HANDLER ";
+
             std::map<std::string, std::shared_ptr<pcl::PointCloud<pcl::PointXYZ>>> pointclouds_map_;
 
             std::vector<std::pair<std::string, std::string>> pcd_pairs; 

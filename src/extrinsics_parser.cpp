@@ -71,7 +71,8 @@ namespace data_provider
         }
 
         tf::Transform transform(q, t);
-        transforms_cache.push_back(tf::StampedTransform(transform, ros::Time::now(), parent_frame_id, child_frame_id));
+        initial_transforms_cache.push_back( tf::StampedTransform(addNoise(q,t), ros::Time::now(), parent_frame_id, child_frame_id));
+        gt_transforms_cache.push_back(tf::StampedTransform(transform, ros::Time::now(), "gt_" + parent_frame_id, "gt_" + child_frame_id));
     }
 
     void extrinsics_manager::broadcastTFs(const ros::TimerEvent&)
@@ -79,10 +80,36 @@ namespace data_provider
     //publish cached transforms
     {
         static tf::TransformBroadcaster br;
-        for (auto& transform: transforms_cache)
+
+        for (auto& transform: gt_transforms_cache)
         {
             br.sendTransform(transform);
         }
+
+        for (auto& transform: initial_transforms_cache)
+        {
+            br.sendTransform(transform);
+        }
+    }
+
+    tf::Transform extrinsics_manager::addNoise(tf::Quaternion q, tf::Vector3 t)
+    {
+        double yaw, pitch, roll;
+        tf::Matrix3x3 mat(q);
+        mat.getEulerYPR(yaw, pitch, roll);
+
+        yaw += std::round(rotation_noise_d(gen));
+        pitch += std::round(rotation_noise_d(gen));
+        roll += std::round(rotation_noise_d(gen));
+
+        t.setX( t.x() + std::round(translation_noise_d(gen)) );
+        t.setY( t.y() + std::round(translation_noise_d(gen)) );
+        t.setZ( t.z() + std::round(translation_noise_d(gen)) );
+
+        tf::Quaternion quat(yaw, pitch, roll);
+        tf::Transform transform(quat, t);
+
+        return transform;
     }
 
     bool extrinsics_manager::next()
@@ -93,8 +120,9 @@ namespace data_provider
 
         if (DEBUG) ROS_INFO_STREAM(module_name << "######### GOING FOR NEXT AGENT'S CALIBRATIONS ########");
         if (DEBUG) ROS_INFO_STREAM(module_name << "Caching -> " << all_agents[agent_idx]);
-        transforms_cache.clear(); // clear tf data from another agent
-
+        gt_transforms_cache.clear(); // clear tf data from another agent
+        initial_transforms_cache.clear();
+        
         for(auto& subdir : fs::directory_iterator(all_agents[agent_idx]))
         {
             if (fs::path(subdir).extension() == ".yaml")
