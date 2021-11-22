@@ -1,9 +1,34 @@
 #include "evaluator.hpp"
 
 
-evaluator::evaluator(){}
+evaluator::serve() // TODO: HIGH PRIORITY: figure out the type of service  
+// input parameter is tf_eval_srv: agent_name, scene_name, parent_frame_id, child_frame_id, result_tf
+//                                  
+{
+    // tf::StampedTransform gt_tf = getTFs(parent_frame_id, child_frame_id);
+    // tfError inst_err = compError(GT_TF, result_tf); // calculate error between "GT_TF" and "result_tf"
+    // error_maps[agent_name][scene_name].push_back(inst_err);
 
-tfError evaluator::compError(tf::Transform tf_gt, tf::Transform tf_pred)
+    // TODO: if all data is processed, handle it
+    //                      otherwise, call service to trigger data publisher            
+}
+
+tf::StampedTransform evaluator::getTFs(std::string parent_frame, std::string child_frame)
+{
+    tf::StampedTransform transform;
+    try
+    {
+      listener.lookupTransform(parent_frame, child_frame, // check "target" and "source" frames   
+                               ros::Time(0), transform);
+    } catch (tf::TransformException ex) {
+      ROS_ERROR("%s",ex.what());
+      ros::Duration(1.0).sleep();
+    }
+
+    return transform;
+}
+
+tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
 {
     tfError err;
     tf::Vector3 gt_translation = tf_gt.getOrigin();
@@ -25,4 +50,9 @@ tfError evaluator::compError(tf::Transform tf_gt, tf::Transform tf_pred)
     err.yaw = (float) (gt_yaw - pred_yaw);
 
     return err;
+}
+
+evaluator::evaluator()
+{
+    service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
 }
