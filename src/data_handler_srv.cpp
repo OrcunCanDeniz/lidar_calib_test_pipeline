@@ -31,25 +31,31 @@ namespace data_provider
         return true;
     }
 
-    void data_handler::setSubdirs(std::string parent_dir, bool is_dataset, int agent_idx=0)
+    bool data_handler::cacheScene()
     {
-        for(auto& subdir : fs::directory_iterator(parent_dir))
+        //cache scene data from disk, set the next scene to be cached
+        //return false when all dataset is processed 
+        if (is_last_scene) return false;
+        if (curr_scene_idx < (int)scenes_of_agent[curr_agent_idx].size()-1) // update the directory to be cached in the next call
         {
-            if (fs::is_directory(subdir) && subdir.path().filename() != "extrinsics")
+            curr_scene_idx++;
+        } else {
+            if( curr_agent_idx < (int)scenes_of_agent.size() -1)
             {
-                if (is_dataset) // if subdirs are agents
-                {
-                    agent_dirs.push_back(subdir.path().string());
-                } else {
-                    if (scenes_of_agent.size() == agent_idx) 
-                    {
-                        std::vector<std::string> tmp;
-                        scenes_of_agent.push_back(tmp);
-                    }
-                    scenes_of_agent[agent_idx].push_back(subdir.path().string());
-                }
+                curr_agent_idx++;
+                extManager.next(); // set of extrinsics to manager for next agent
+                ROS_INFO_STREAM(module_name << "CACHED NEW TF");
+                curr_scene_idx = 0;
+            } else { // dont let the idx to increase but raise flag that shows no more data left
+                is_last_scene = true;
+                ROS_WARN_STREAM(module_name << "ALL DATA HAS ALREADY BEEN PROCESSED.");
+                return false;
             }
         }
+
+        std::cout<< "Caching agent "<< curr_agent_idx << ", scene "<< curr_scene_idx << " is_last_scene: "<< is_last_scene << std::endl;
+        ReadScene(scenes_of_agent[curr_agent_idx][curr_scene_idx]); // cache scene data
+        return true;
     }
 
     void data_handler::ReadScene(std::string scene_dir)
@@ -79,30 +85,22 @@ namespace data_provider
         }
     }
 
-    bool data_handler::cacheScene() 
-    {
-        //cache scene data from disk, set the next scene to be cached
-        //return false when all dataset is processed 
-        if (is_last_scene) return false;
+    void data_handler::publishPcds(std::string parent_name, std::string child_name)
+    { 
+        std::cout<<"[publishPcds] Publishing parent_frame "<< parent_name << ", child "<< child_name <<std::endl;
+        pcl::toROSMsg(*pointclouds_map_[parent_name], parent_msg.pointcloud);
+        pcl::toROSMsg(*pointclouds_map_[child_name], child_msg.pointcloud);
+        parent_msg.header.frame_id = parent_name;
+        child_msg.header.frame_id = child_name;  /// PCD NAMES MUST BE SAME WITH THEIR FRAME_ID
+        std::string agent_id = fs::path(agent_dirs[curr_agent_idx]).filename();
+        std::string scene_id = fs::path(scenes_of_agent[curr_agent_idx][curr_scene_idx]).filename();;
         
-        std::cout<< "Caching agent "<< curr_agent_idx << ", scene "<< curr_scene_idx << std::endl;
-        ReadScene(scenes_of_agent[curr_agent_idx][curr_scene_idx]); // cache scene data 
-        
-        if (curr_scene_idx < scenes_of_agent[curr_agent_idx].size()-1) // update the directory to be cached in the next call
-        {
-            curr_scene_idx++;
-        } else {
-            if( curr_agent_idx < (int)scenes_of_agent.size() -1)
-            {
-                curr_agent_idx++;
-                extManager.next(); // set of extrinsics to manager for next agent
-                ROS_INFO_STREAM(module_name << "CACHED NEW TF");
-                curr_scene_idx = 0;
-            } else { // dont let the idx to increase but raise flag that shows no more data left
-                is_last_scene = true;
-            }
-        }
-        return true;
+        parent_msg.agent = agent_id;
+        parent_msg.scene = scene_id;
+        child_msg.agent = agent_id;
+        child_msg.scene = scene_id;
+        pubs_map_["parent"]->publish(parent_msg);
+        pubs_map_["child"]->publish(child_msg);
     }
 
     void data_handler::createPcdPairs() 
@@ -119,17 +117,26 @@ namespace data_provider
         std::cout<<"[createPcdPairs] Number of PCD combinations: "<<pcd_pairs.size()<<std::endl;
     }
 
-    void data_handler::publishPcds(std::string parent_name, std::string child_name)
-    { 
-        std::cout<<"[publishPcds] Publishing parent_frame "<< parent_name << ", child "<< child_name <<std::endl;
-        pcl::toROSMsg(*pointclouds_map_[parent_name], parent_msg);
-        pcl::toROSMsg(*pointclouds_map_[child_name], child_msg);
-        parent_msg.header.frame_id = parent_name;
-        child_msg.header.frame_id = child_name;  /// PCD NAMES MUST BE SAME WITH THEIR FRAME_ID
-        pubs_map_["parent"]->publish(parent_msg);
-        pubs_map_["child"]->publish(child_msg);
+    void data_handler::setSubdirs(std::string parent_dir, bool is_dataset, int agent_idx=0)
+    {
+        for(auto& subdir : fs::directory_iterator(parent_dir))
+        {
+            if (fs::is_directory(subdir) && subdir.path().filename() != "extrinsics")
+            {
+                if (is_dataset) // if subdirs are agents
+                {
+                    agent_dirs.push_back(subdir.path().string());
+                } else {
+                    if (scenes_of_agent.size() == agent_idx) 
+                    {
+                        std::vector<std::string> tmp;
+                        scenes_of_agent.push_back(tmp);
+                    }
+                    scenes_of_agent[agent_idx].push_back(subdir.path().string());
+                }
+            }
+        }
     }
-    
 
     std::string data_handler::getFileName(std::string file_path) 
     {
@@ -171,8 +178,8 @@ namespace data_provider
         timer = nh_.createTimer(ros::Duration(0.1), &extrinsics_manager::broadcastTFs, &extManager);
         pubs_map_["parent"].reset(new ros::Publisher());
         pubs_map_["child"].reset(new ros::Publisher());
-        *pubs_map_["parent"] = private_nh.advertise<sensor_msgs::PointCloud2>("/parent/pointcloud", 1); 
-        *pubs_map_["child"] = private_nh.advertise<sensor_msgs::PointCloud2>("/child/pointcloud", 1); 
+        *pubs_map_["parent"] = private_nh.advertise<lidar_ext_test_msg::test_pointcloud>("/parent/pointcloud", 1); 
+        *pubs_map_["child"] = private_nh.advertise<lidar_ext_test_msg::test_pointcloud>("/child/pointcloud", 1); 
 
         service = private_nh.advertiseService("provide_pc_data", &data_handler::serve, this);
         ROS_INFO_STREAM(module_name << "Ready for data requests");

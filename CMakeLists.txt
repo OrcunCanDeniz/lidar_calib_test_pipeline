@@ -8,12 +8,13 @@ add_compile_options(-std=c++14)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  # message_generation
+  message_generation
   pcl_conversions
   pcl_ros
   roscpp
   sensor_msgs
   std_msgs
+  lidar_ext_test_msg
 )
 
 find_package(yaml-cpp REQUIRED)
@@ -59,8 +60,7 @@ add_definitions(${PCL_DEFINITIONS})
 ## Generate messages in the 'msg' folder
 # add_message_files(
 #   FILES
-#   Message1.msg
-#   Message2.msg
+#   pointcloud_test_msg.msg
 # )
 
 ## Generate services in the 'srv' folder
@@ -76,6 +76,7 @@ add_definitions(${PCL_DEFINITIONS})
 # generate_messages(
 #   DEPENDENCIES
 #   std_msgs
+#   sensor_msgs
 # )
 
 ################################################
@@ -109,9 +110,8 @@ add_definitions(${PCL_DEFINITIONS})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
- CATKIN_DEPENDS
 #  LIBRARIES data_handler_srv
-#  CATKIN_DEPENDS message_generation pcl_conversions pcl_ros roscpp sensor_msgs std_msgs
+ CATKIN_DEPENDS message_runtime  pcl_conversions pcl_ros roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 

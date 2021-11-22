@@ -4,6 +4,8 @@
 #include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/PointCloud2.h>
 
+#include "lidar_ext_test_msg/test_pointcloud.h"
+
 #include <pcl/io/pcd_io.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl/common/transforms.h>
@@ -45,10 +47,10 @@ namespace data_provider
             std::vector<std::string> agent_dirs;
             std::vector<std::vector<std::string>> scenes_of_agent;
             int curr_agent_idx = 0;
-            int curr_scene_idx = 0;
+            int curr_scene_idx = -1;
             bool is_last_scene;
 
-            sensor_msgs::PointCloud2 parent_msg, child_msg;
+            lidar_ext_test_msg::test_pointcloud parent_msg, child_msg;
 
             // subscribers
             std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs_map_;
@@ -57,7 +59,7 @@ namespace data_provider
             extrinsics_manager extManager;
             ros::Timer timer;
 
-            const std::string module_name = "DATA HANDLER ";
+            const std::string module_name = "[DATA HANDLER] ";
 
             std::map<std::string, std::shared_ptr<pcl::PointCloud<pcl::PointXYZ>>> pointclouds_map_;
 
