@@ -2,12 +2,12 @@
 
 
 evaluator::serve() // TODO: HIGH PRIORITY: figure out the type of service  
-// input parameter is tf_eval_srv: agent_name, scene_name, parent_frame_id, child_frame_id, result_tf
+// input parameter is tf_eval_srv: result_tf
 //                                  
 {
-    // tf::StampedTransform gt_tf = getTFs(parent_frame_id, child_frame_id);
+    // tf::StampedTransform gt_tf = getTFs(frame_type_to_id_m["parent"], frame_type_to_id_m["child"]);
     // tfError inst_err = compError(GT_TF, result_tf); // calculate error between "GT_TF" and "result_tf"
-    // error_maps[agent_name][scene_name].push_back(inst_err);
+    // error_maps[agent_id][scene_id].push_back(inst_err);
 
     // TODO: if all data is processed, handle it
     //                      otherwise, call service to trigger data publisher            
@@ -21,8 +21,8 @@ tf::StampedTransform evaluator::getTFs(std::string parent_frame, std::string chi
       listener.lookupTransform(parent_frame, child_frame, // check "target" and "source" frames   
                                ros::Time(0), transform);
     } catch (tf::TransformException ex) {
-      ROS_ERROR("%s",ex.what());
-      ros::Duration(1.0).sleep();
+        ROS_ERROR("%s",ex.what());
+        ros::Duration(1.0).sleep();
     }
 
     return transform;
@@ -52,7 +52,25 @@ tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
     return err;
 }
 
+void evaluator::callback(lidar_ext_test_msg::test_pointcloud msg, std::string frame_type)
+{
+    frame_type_to_id_m[frame_type] = msg.header.frame_id;
+    
+    if (frame_type == "parent")
+    {
+        agent_id = msg.agent;
+        scene_id = msg.scene;
+    }
+}
+
+
 evaluator::evaluator()
 {
     service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
+
+    parentPc_sub = nh_.subscribe<lidar_ext_test_msg::test_pointcloud>("parent/pointcloud", 1, boost::bind(callback, _1, "parent"));
+    childPc_sub = nh_.subscribe<lidar_ext_test_msg::test_pointcloud>("child/pointcloud", 1, boost::bind(callback, _1, "child"));
+    
+    frame_type_to_id_m["parent"] = " ";
+    frame_type_to_id_m["child"] = " " ;
 }

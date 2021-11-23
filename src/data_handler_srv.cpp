@@ -61,6 +61,7 @@ namespace data_provider
     void data_handler::ReadScene(std::string scene_dir)
     {   /// input: path to scene dir
         pcds_in_scene.clear();
+        pointclouds_map_.clear();
         std::vector<std::string> files_in_scene;
         for(auto& scene_file: fs::directory_iterator(scene_dir))
         {
