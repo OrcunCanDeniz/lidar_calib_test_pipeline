@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(data_handler_srv)
+project(lidar_calib_tester)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)
@@ -129,8 +129,8 @@ include_directories(
 set(CMAKE_CXX_STANDARD 11)
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME}
-  src/data_handler_srv.cpp
+add_library(data_handler_lib
+  src/data_handler_server/data_handler.cpp
 )
 
 add_library(extrinsic_lib
@@ -144,7 +144,7 @@ add_library(extrinsic_lib
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/data_handler_srv_node.cpp)
+add_executable(data_handling_server src/data_handler_server/data_handler_server_node.cpp)
 # add_executable(test_ext src/extrinsics_parser.cpp)
 
 ## Rename C++ executable without prefix
@@ -158,9 +158,9 @@ add_executable(${PROJECT_NAME}_node src/data_handler_srv_node.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
+target_link_libraries(data_handling_server
   ${catkin_LIBRARIES}
-  ${PROJECT_NAME}
+  data_handler_lib
   extrinsic_lib
   ${PCL_LIBRARIES}
   stdc++fs
@@ -173,7 +173,7 @@ target_link_libraries(${PROJECT_NAME}_node
 #                       stdc++fs
 #                       )
 
-add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(data_handling_server ${catkin_EXPORTED_TARGETS})
 #############
 ## Install ##
 #############
@@ -196,7 +196,7 @@ add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-install(TARGETS ${PROJECT_NAME}_node
+install(TARGETS data_handling_server
 ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

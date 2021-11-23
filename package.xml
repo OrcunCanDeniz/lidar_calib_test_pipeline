@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>data_handler_srv</name>
+  <name>lidar_calib_tester</name>
   <version>0.0.0</version>
   <description>A node that will publish a pair of PointCloud messages on call. While broadcasting TF between those Pointcloud.</description>
 
