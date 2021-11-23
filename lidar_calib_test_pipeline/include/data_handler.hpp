@@ -4,7 +4,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/PointCloud2.h>
 
-#include "lidar_ext_test_msg/test_pointcloud.h"
+#include "lidar_calib_test_comms/test_pointcloud.h"
 
 #include <pcl/io/pcd_io.h>
 #include <pcl_ros/point_cloud.h>
@@ -50,7 +50,7 @@ namespace data_provider
             int curr_scene_idx = -1;
             bool is_last_scene;
 
-            lidar_ext_test_msg::test_pointcloud parent_msg, child_msg;
+            lidar_calib_test_comms::test_pointcloud parent_msg, child_msg;
 
             // subscribers
             std::map<std::string, boost::shared_ptr<ros::Publisher>> pubs_map_;

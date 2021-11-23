@@ -179,8 +179,8 @@ namespace data_provider
         timer = nh_.createTimer(ros::Duration(0.1), &extrinsics_manager::broadcastTFs, &extManager);
         pubs_map_["parent"].reset(new ros::Publisher());
         pubs_map_["child"].reset(new ros::Publisher());
-        *pubs_map_["parent"] = private_nh.advertise<lidar_ext_test_msg::test_pointcloud>("/parent/pointcloud", 1); 
-        *pubs_map_["child"] = private_nh.advertise<lidar_ext_test_msg::test_pointcloud>("/child/pointcloud", 1); 
+        *pubs_map_["parent"] = private_nh.advertise<lidar_calib_test_comms::test_pointcloud>("/parent/pointcloud", 1); 
+        *pubs_map_["child"] = private_nh.advertise<lidar_calib_test_comms::test_pointcloud>("/child/pointcloud", 1); 
 
         service = private_nh.advertiseService("provide_pc_data", &data_handler::serve, this);
         ROS_INFO_STREAM(module_name << "Ready for data requests");

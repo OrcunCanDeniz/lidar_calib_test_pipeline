@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>lidar_calib_tester</name>
+  <name>lidar_calib_test_pipeline</name>
   <version>0.0.0</version>
   <description>A node that will publish a pair of PointCloud messages on call. While broadcasting TF between those Pointcloud.</description>
 
@@ -53,6 +53,7 @@
   <build_depend>pcl_ros</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <build_depend>lidar_calib_test_comms</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_export_depend>pcl_conversions</build_export_depend>
   <build_export_depend>pcl_ros</build_export_depend>

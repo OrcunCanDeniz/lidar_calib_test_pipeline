@@ -52,7 +52,7 @@ tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
     return err;
 }
 
-void evaluator::callback(lidar_ext_test_msg::test_pointcloud msg, std::string frame_type)
+void evaluator::callback(lidar_calib_test_comms::test_pointcloud msg, std::string frame_type)
 {
     frame_type_to_id_m[frame_type] = msg.header.frame_id;
     
@@ -68,8 +68,8 @@ evaluator::evaluator()
 {
     service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
 
-    parentPc_sub = nh_.subscribe<lidar_ext_test_msg::test_pointcloud>("parent/pointcloud", 1, boost::bind(callback, _1, "parent"));
-    childPc_sub = nh_.subscribe<lidar_ext_test_msg::test_pointcloud>("child/pointcloud", 1, boost::bind(callback, _1, "child"));
+    parentPc_sub = nh_.subscribe<lidar_calib_test_comms::test_pointcloud>("parent/pointcloud", 1, boost::bind(callback, _1, "parent"));
+    childPc_sub = nh_.subscribe<lidar_calib_test_comms::test_pointcloud>("child/pointcloud", 1, boost::bind(callback, _1, "child"));
     
     frame_type_to_id_m["parent"] = " ";
     frame_type_to_id_m["child"] = " " ;

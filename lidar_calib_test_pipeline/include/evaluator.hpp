@@ -4,7 +4,7 @@
 #include <string>
 #include <tf/transform_listener.h>
 #include <ros/service.h>
-#include "lidar_ext_test_msg/test_pointcloud.h"
+#include "lidar_calib_test_comms/test_pointcloud.h"
 
 struct tfError {
     float x;
@@ -22,7 +22,7 @@ class evaluator
         tfError compError(tf::Transform tf_gt, tf::Transform tf_pred); // TODO: take the result and GT TF. calculate the error between.
         void compStd();   // TODO: Compute standard deviation.
         void serve();     
-        void callback(lidar_ext_test_msg::test_pointcloud msg, std::string frame_type);
+        void callback(lidar_calib_test_comms::test_pointcloud msg, std::string frame_type);
         tf::StampedTransform getTFs(std::string parent_frame, std::string child_frame); 
 
     private:
