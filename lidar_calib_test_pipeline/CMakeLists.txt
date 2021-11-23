@@ -9,6 +9,7 @@ add_compile_options(-std=c++14)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   message_generation
+  message_runtime
   pcl_conversions
   pcl_ros
   roscpp
@@ -111,7 +112,7 @@ add_definitions(${PCL_DEFINITIONS})
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES data_handler_srv
- CATKIN_DEPENDS message_runtime  pcl_conversions pcl_ros roscpp sensor_msgs std_msgs
+ CATKIN_DEPENDS message_runtime  pcl_conversions pcl_ros roscpp sensor_msgs std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -137,16 +138,14 @@ add_library(extrinsic_lib
   src/extrinsics_parser.cpp
 )
 
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-
-## Declare a C++ executable
-## With catkin_make all packages are built within a single CMake context
-## The recommended prefix ensures that target names across packages don't collide
 add_executable(data_handling_server src/data_handler_server/data_handler_server_node.cpp)
 # add_executable(test_ext src/extrinsics_parser.cpp)
 
+add_library(evaluator_lib src/evaluator.cpp)
+
+target_link_libraries(evaluator_lib
+  ${catkin_LIBRARIES}
+  )
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use

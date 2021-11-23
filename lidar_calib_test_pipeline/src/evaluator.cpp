@@ -1,7 +1,6 @@
 #include "evaluator.hpp"
 
-
-evaluator::serve() // TODO: HIGH PRIORITY: figure out the type of service  
+bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_calib_test_comms::calib_result::Response &res)   
 // input parameter is tf_eval_srv: result_tf
 //                                  
 {
@@ -10,7 +9,9 @@ evaluator::serve() // TODO: HIGH PRIORITY: figure out the type of service
     // error_maps[agent_id][scene_id].push_back(inst_err);
 
     // TODO: if all data is processed, handle it
-    //                      otherwise, call service to trigger data publisher            
+    //                      otherwise, call service to trigger data publisher   
+    res.ret = true;
+    return true;  
 }
 
 tf::StampedTransform evaluator::getTFs(std::string parent_frame, std::string child_frame)
@@ -18,8 +19,8 @@ tf::StampedTransform evaluator::getTFs(std::string parent_frame, std::string chi
     tf::StampedTransform transform;
     try
     {
-      listener.lookupTransform(parent_frame, child_frame, // check "target" and "source" frames   
-                               ros::Time(0), transform);
+    listener.lookupTransform(parent_frame, child_frame, // check "target" and "source" frames   
+                            ros::Time(0), transform);
     } catch (tf::TransformException ex) {
         ROS_ERROR("%s",ex.what());
         ros::Duration(1.0).sleep();
@@ -52,24 +53,25 @@ tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
     return err;
 }
 
-void evaluator::callback(lidar_calib_test_comms::test_pointcloud msg, std::string frame_type)
+void evaluator::callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type)
 {
-    frame_type_to_id_m[frame_type] = msg.header.frame_id;
+    frame_type_to_id_m[frame_type] = msg->header.frame_id;
     
     if (frame_type == "parent")
     {
-        agent_id = msg.agent;
-        scene_id = msg.scene;
+        agent_id = msg->agent;
+        scene_id = msg->scene;
     }
 }
 
 
 evaluator::evaluator()
 {
+    ros::NodeHandle private_nh("~");
     service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
 
-    parentPc_sub = nh_.subscribe<lidar_calib_test_comms::test_pointcloud>("parent/pointcloud", 1, boost::bind(callback, _1, "parent"));
-    childPc_sub = nh_.subscribe<lidar_calib_test_comms::test_pointcloud>("child/pointcloud", 1, boost::bind(callback, _1, "child"));
+    parentPc_sub = private_nh.subscribe<lidar_calib_test_comms::test_pointcloud>("parent/pointcloud", 1, boost::bind(&evaluator::callback, this, _1, "parent"));
+    childPc_sub = private_nh.subscribe<lidar_calib_test_comms::test_pointcloud>("child/pointcloud", 1, boost::bind(&evaluator::callback, this, _1, "child"));
     
     frame_type_to_id_m["parent"] = " ";
     frame_type_to_id_m["child"] = " " ;

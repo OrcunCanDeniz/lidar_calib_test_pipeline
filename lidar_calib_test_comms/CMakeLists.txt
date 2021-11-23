@@ -73,6 +73,7 @@ generate_messages(
   DEPENDENCIES
   sensor_msgs
   std_msgs
+  geometry_msgs
 )
 
 ################################################
@@ -107,7 +108,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES lidar_ext_test_msg
-#  CATKIN_DEPENDS message_generation message_runtime roscpp sensor_msgs std_msgs
+ CATKIN_DEPENDS message_generation message_runtime roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 
