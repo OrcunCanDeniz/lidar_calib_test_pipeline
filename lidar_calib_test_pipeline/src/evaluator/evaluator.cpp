@@ -4,12 +4,22 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
 // input parameter is tf_eval_srv: result_tf
 //                                  
 {
-    // tf::StampedTransform gt_tf = getTFs(frame_type_to_id_m["parent"], frame_type_to_id_m["child"]);
-    // tfError inst_err = compError(GT_TF, result_tf); // calculate error between "GT_TF" and "result_tf"
+    if (end_of_dataset) return false;
+
+    ROS_INFO_STREAM("Parent Frame: " << req.transform.header.frame_id << " Child Frame: " << req.transform.child_frame_id 
+                        << " Agent: " << req.agent << " Scene: " << req.scene);
+    tf::StampedTransform gt_tf = getTFs(frame_type_to_id_m["parent"], frame_type_to_id_m["child"]);
+    // tfError inst_err = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" // TODO: handle geometry_msgs::transform usage
     // error_maps[agent_id][scene_id].push_back(inst_err);
 
-    // TODO: if all data is processed, handle it
-    //                      otherwise, call service to trigger data publisher   
+
+    std_srvs::SetBool srv;
+    if(!data_provider_client.call(srv))
+    {
+        end_of_dataset = true; // returns false when dataset is finished 
+        ROS_WARN_STREAM(module_name << "End of dataset!");
+    }  
+
     res.ret = true;
     return true;  
 }
@@ -53,25 +63,27 @@ tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
     return err;
 }
 
-void evaluator::callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type)
-{
-    frame_type_to_id_m[frame_type] = msg->header.frame_id;
+// void evaluator::callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type)
+// {
+//     frame_type_to_id_m[frame_type] = msg->header.frame_id;
     
-    if (frame_type == "parent")
-    {
-        agent_id = msg->agent;
-        scene_id = msg->scene;
-    }
-}
+//     if (frame_type == "parent")
+//     {
+//         agent_id = msg->agent;
+//         scene_id = msg->scene;
+//     }
+//     ROS_INFO("CB DONE");
+// }
 
 
 evaluator::evaluator()
 {
     ros::NodeHandle private_nh("~");
     service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
+    data_provider_client = private_nh.serviceClient<std_srvs::SetBool>("/data_provider_node/provide_pc_data");
 
-    parentPc_sub = private_nh.subscribe<lidar_calib_test_comms::test_pointcloud>("parent/pointcloud", 1, boost::bind(&evaluator::callback, this, _1, "parent"));
-    childPc_sub = private_nh.subscribe<lidar_calib_test_comms::test_pointcloud>("child/pointcloud", 1, boost::bind(&evaluator::callback, this, _1, "child"));
+    // parentPc_sub = nh_.subscribe<lidar_calib_test_comms::test_pointcloud>("parent/pointcloud", 1, boost::bind(&evaluator::callback, this, _1, "parent"));
+    // childPc_sub = nh_.subscribe<lidar_calib_test_comms::test_pointcloud>("child/pointcloud", 1, boost::bind(&evaluator::callback, this, _1, "child"));
     
     frame_type_to_id_m["parent"] = " ";
     frame_type_to_id_m["child"] = " " ;

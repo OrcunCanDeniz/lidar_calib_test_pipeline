@@ -7,6 +7,7 @@
 
 #include "lidar_calib_test_comms/test_pointcloud.h"
 #include "lidar_calib_test_comms/calib_result.h"
+#include <std_srvs/SetBool.h>
 
 struct tfError {
     float x;
@@ -30,8 +31,12 @@ class evaluator
     private:
         ros::NodeHandle nh_;
         ros::ServiceServer service; // this service will be called from calibrator
+        ros::ServiceClient data_provider_client;
+
         ros::Subscriber parentPc_sub, childPc_sub; 
-            
+        
+        bool end_of_dataset = false;
+
         const std::string module_name = "[EVALUATOR] ";
 
         std::map< std::string, std::map<std::string, std::vector<tfError> > > error_maps; // agent -> scene -> pair -> error

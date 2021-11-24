@@ -157,8 +157,7 @@ namespace data_provider
     {
         ros::NodeHandle private_nh("~");
         const std::string HOME = getenv("HOME");
-        private_nh.param<std::string>("dataset_dir", dataset_dir, HOME + "/test_ws/src//lidar_calib_tester/dummy_dataset/"); //TODO: Parametrize directory selection
-
+        private_nh.param<std::string>("dataset_dir", dataset_dir, HOME + "/test_ws/src/lidar_calib_tester/lidar_calib_test_pipeline/dummy_dataset/"); //TODO: Parametrize directory selection
         if (!IsPathExist(dataset_dir))
         {
             ROS_ERROR_STREAM("Failed to find directory: " << dataset_dir);

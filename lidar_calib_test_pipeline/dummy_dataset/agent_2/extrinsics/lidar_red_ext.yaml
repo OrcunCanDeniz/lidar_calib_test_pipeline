@@ -7,5 +7,5 @@ translation:
   x: 1.11228
   y: 0.369431
   z: -1.41456
-child_frame_id: lidar_blue
+child_frame_id: lidar_red
 parent_frame_id: body

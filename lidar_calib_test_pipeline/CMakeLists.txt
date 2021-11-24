@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(yaml-cpp REQUIRED)
-
 find_package(PCL 1.7 REQUIRED common io visualization )
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -139,22 +138,6 @@ add_library(extrinsic_lib
 )
 
 add_executable(data_handling_server src/data_handler_server/data_handler_server_node.cpp)
-# add_executable(test_ext src/extrinsics_parser.cpp)
-
-add_library(evaluator_lib src/evaluator.cpp)
-
-target_link_libraries(evaluator_lib
-  ${catkin_LIBRARIES}
-  )
-## Rename C++ executable without prefix
-## The above recommended prefix causes long target names, the following renames the
-## target back to the shorter version for ease of user use
-## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(data_handling_server
@@ -165,14 +148,22 @@ target_link_libraries(data_handling_server
   stdc++fs
   yaml-cpp
 )
-# target_link_libraries( test_ext
-#                       ${catkin_LIBRARIES}
-#                       ${PROJECT_NAME} 
-#                       yaml-cpp
-#                       stdc++fs
-#                       )
 
 add_dependencies(data_handling_server ${catkin_EXPORTED_TARGETS})
+
+add_library(evaluator_lib src/evaluator/evaluator.cpp)
+
+add_executable(evaluator src/evaluator/evaluator_node.cpp)
+
+target_link_libraries(evaluator
+  evaluator_lib
+  ${catkin_LIBRARIES}
+)
+
+add_executable(calibrator src/dummy_calibrator.cpp)
+target_link_libraries(calibrator
+  ${catkin_LIBRARIES}
+  )
 #############
 ## Install ##
 #############
