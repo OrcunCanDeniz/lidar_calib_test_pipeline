@@ -83,11 +83,13 @@ namespace data_provider
 
         for (auto& transform: gt_transforms_cache)
         {
+            transform.stamp_ = ros::Time::now(); // refresh transform timestamps
             br.sendTransform(transform);
         }
 
         for (auto& transform: initial_transforms_cache)
         {
+            transform.stamp_ = ros::Time::now();
             br.sendTransform(transform);
         }
     }

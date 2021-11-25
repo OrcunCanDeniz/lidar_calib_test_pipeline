@@ -55,17 +55,17 @@ void dummy_calibrator::pcCallback(const lidar_calib_test_comms::test_pointcloud:
 
     tf_empty.header.frame_id = parent_msg->header.frame_id;
     tf_empty.child_frame_id = child_msg->header.frame_id;
+    tf_empty.transform.rotation.x = 1;
     tf_empty.header.stamp = ros::Time::now();
+
 
     srv.request.transform = tf_empty;
     srv.request.agent = parent_msg->agent;
     srv.request.scene = parent_msg->scene;
-
+    std::cout<<"######################################"<<std::endl;
     ROS_INFO_STREAM("Agent: " << parent_msg->agent << " Scene: " << parent_msg->scene);
 
-
     sleep(2);
-
 
     if(error_service_client.call(srv)) 
     {

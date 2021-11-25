@@ -26,7 +26,8 @@ class evaluator
         void compStd();   // TODO: Compute standard deviation.
         bool serve(lidar_calib_test_comms::calib_result::Request &req, lidar_calib_test_comms::calib_result::Response &res);
         void callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type);
-        tf::StampedTransform getTFs(std::string parent_frame, std::string child_frame); 
+        tf::StampedTransform getGTTF(std::string parent_frame, std::string child_frame); 
+        tf::Transform fromMsg(geometry_msgs::TransformStamped received_result);
 
     private:
         ros::NodeHandle nh_;
@@ -42,7 +43,7 @@ class evaluator
         std::map< std::string, std::map<std::string, std::vector<tfError> > > error_maps; // agent -> scene -> pair -> error
 
         std::string agent_id, scene_id; 
-        std::map<std::string, std::string> frame_type_to_id_m; // frame_type to frame_id
+        std::string parent_frame, child_frame; 
         
         tf::TransformListener listener;
 };

@@ -6,12 +6,21 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
 {
     if (end_of_dataset) return false;
 
-    ROS_INFO_STREAM("Parent Frame: " << req.transform.header.frame_id << " Child Frame: " << req.transform.child_frame_id 
-                        << " Agent: " << req.agent << " Scene: " << req.scene);
-    tf::StampedTransform gt_tf = getTFs(frame_type_to_id_m["parent"], frame_type_to_id_m["child"]);
-    // tfError inst_err = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" // TODO: handle geometry_msgs::transform usage
-    // error_maps[agent_id][scene_id].push_back(inst_err);
+    parent_frame = req.transform.header.frame_id;
+    child_frame = req.transform.child_frame_id;
 
+    ROS_INFO_STREAM("Agent: " << req.agent << " Scene: " << req.scene);
+    tf::StampedTransform gt_tf = getGTTF(parent_frame, child_frame);
+    tf::Transform result_tf = fromMsg(req.transform);
+    tfError inst_err = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" 
+    std::cout<< inst_err.x << " " <<
+                inst_err.y << " " <<
+                inst_err.z <<" " << 
+                inst_err.roll <<" " <<
+                inst_err.pitch <<" " <<
+                inst_err.yaw << std::endl; 
+
+    // error_maps[agent_id][scene_id].push_back(inst_err);
 
     std_srvs::SetBool srv;
     if(!data_provider_client.call(srv))
@@ -24,19 +33,40 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
     return true;  
 }
 
-tf::StampedTransform evaluator::getTFs(std::string parent_frame, std::string child_frame)
+tf::StampedTransform evaluator::getGTTF(std::string parent_frame, std::string child_frame)
 {
+    parent_frame = "gt_" + parent_frame; 
+    child_frame = "gt_" + child_frame; 
+
+     ROS_INFO_STREAM("Parent Frame: " << parent_frame << " Child Frame: " << child_frame);
+
     tf::StampedTransform transform;
     try
     {
-    listener.lookupTransform(parent_frame, child_frame, // check "target" and "source" frames   
-                            ros::Time(0), transform);
+        listener.waitForTransform(parent_frame, child_frame, ros::Time(0), ros::Duration(10.0));
+        listener.lookupTransform(parent_frame, child_frame, ros::Time(0), transform);
     } catch (tf::TransformException ex) {
         ROS_ERROR("%s",ex.what());
         ros::Duration(1.0).sleep();
     }
 
     return transform;
+}
+
+tf::Transform evaluator::fromMsg(geometry_msgs::TransformStamped received_result)
+{
+    tf::Quaternion q( received_result.transform.rotation.x,
+                      received_result.transform.rotation.y,
+                      received_result.transform.rotation.z,
+                      received_result.transform.rotation.w );
+    tf::Vector3 t(  received_result.transform.translation.x,
+                    received_result.transform.translation.y,
+                    received_result.transform.translation.z );
+
+
+    tf::Transform trans(q,t);
+
+    return trans;
 }
 
 tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
@@ -81,10 +111,4 @@ evaluator::evaluator()
     ros::NodeHandle private_nh("~");
     service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
     data_provider_client = private_nh.serviceClient<std_srvs::SetBool>("/data_provider_node/provide_pc_data");
-
-    // parentPc_sub = nh_.subscribe<lidar_calib_test_comms::test_pointcloud>("parent/pointcloud", 1, boost::bind(&evaluator::callback, this, _1, "parent"));
-    // childPc_sub = nh_.subscribe<lidar_calib_test_comms::test_pointcloud>("child/pointcloud", 1, boost::bind(&evaluator::callback, this, _1, "child"));
-    
-    frame_type_to_id_m["parent"] = " ";
-    frame_type_to_id_m["child"] = " " ;
 }

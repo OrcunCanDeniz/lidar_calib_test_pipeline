@@ -175,7 +175,7 @@ namespace data_provider
 
         extManager.next(); //load first set of extrinsics to manager
 
-        timer = nh_.createTimer(ros::Duration(0.1), &extrinsics_manager::broadcastTFs, &extManager);
+        timer = nh_.createTimer(ros::Duration(0.05), &extrinsics_manager::broadcastTFs, &extManager);
         pubs_map_["parent"].reset(new ros::Publisher());
         pubs_map_["child"].reset(new ros::Publisher());
         *pubs_map_["parent"] = private_nh.advertise<lidar_calib_test_comms::test_pointcloud>("/parent/pointcloud", 1); 
