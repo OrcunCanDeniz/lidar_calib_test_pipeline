@@ -13,14 +13,15 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
     tf::StampedTransform gt_tf = getGTTF(parent_frame, child_frame);
     tf::Transform result_tf = fromMsg(req.transform);
     tfError inst_err = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" 
-    std::cout<< inst_err.x << " " <<
-                inst_err.y << " " <<
-                inst_err.z <<" " << 
-                inst_err.roll <<" " <<
-                inst_err.pitch <<" " <<
-                inst_err.yaw << std::endl; 
+    ROS_INFO_STREAM( "Transform Error: " << 
+                        inst_err.x << " " <<
+                        inst_err.y << " " <<
+                        inst_err.z << " " << 
+                        inst_err.roll << " " <<
+                        inst_err.pitch << " " <<
+                        inst_err.yaw );
 
-    // error_maps[agent_id][scene_id].push_back(inst_err);
+    error_maps[agent_id][scene_id].push_back(inst_err);
 
     std_srvs::SetBool srv;
     if(!data_provider_client.call(srv))
@@ -91,6 +92,11 @@ tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
     err.yaw = (float) (gt_yaw - pred_yaw);
 
     return err;
+}
+
+bool evaluator::isNormalized()
+{
+    
 }
 
 // void evaluator::callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type)
