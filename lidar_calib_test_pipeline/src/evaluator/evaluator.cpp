@@ -2,7 +2,6 @@
 
 bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_calib_test_comms::calib_result::Response &res)   
 // input parameter is tf_eval_srv: result_tf
-//                                  
 {
     if (end_of_dataset) return false;
 
@@ -39,7 +38,7 @@ tf::StampedTransform evaluator::getGTTF(std::string parent_frame, std::string ch
     parent_frame = "gt_" + parent_frame; 
     child_frame = "gt_" + child_frame; 
 
-     ROS_INFO_STREAM("Parent Frame: " << parent_frame << " Child Frame: " << child_frame);
+    ROS_INFO_STREAM("Parent Frame: " << parent_frame << " Child Frame: " << child_frame);
 
     tf::StampedTransform transform;
     try
@@ -59,11 +58,15 @@ tf::Transform evaluator::fromMsg(geometry_msgs::TransformStamped received_result
     tf::Quaternion q( received_result.transform.rotation.x,
                       received_result.transform.rotation.y,
                       received_result.transform.rotation.z,
-                      received_result.transform.rotation.w );
+                      received_result.transform.rotation.w ); 
+    if (!isNormalized(q)) q.normalize(); 
+
+    if (q.length() == 0) ROS_WARN_STREAM("INVALID QUATERNION. (ZERO)");
+    
+
     tf::Vector3 t(  received_result.transform.translation.x,
                     received_result.transform.translation.y,
                     received_result.transform.translation.z );
-
 
     tf::Transform trans(q,t);
 
@@ -94,9 +97,9 @@ tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
     return err;
 }
 
-bool evaluator::isNormalized()
+bool evaluator::isNormalized(tf::Quaternion q)
 {
-    
+    return q.length() == 1;
 }
 
 // void evaluator::callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type)

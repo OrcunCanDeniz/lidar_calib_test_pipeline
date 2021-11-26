@@ -28,6 +28,7 @@ class evaluator
         void callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type);
         tf::StampedTransform getGTTF(std::string parent_frame, std::string child_frame); 
         tf::Transform fromMsg(geometry_msgs::TransformStamped received_result);
+        bool isNormalized(tf::Quaternion q);
 
     private:
         ros::NodeHandle nh_;
