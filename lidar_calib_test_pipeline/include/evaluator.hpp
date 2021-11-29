@@ -1,30 +1,15 @@
 #pragma once
 
 #include <ros/ros.h>
-#include <string>
 #include <tf/transform_listener.h>
 #include <ros/service.h>
 
 #include "lidar_calib_test_comms/test_pointcloud.h"
 #include "lidar_calib_test_comms/calib_result.h"
-#include <std_srvs/SetBool.h>
-#include <math.h>
+#include "std_srvs/SetBool.h"
+#include "types.hpp"
 
-struct genericTf {
-    float x;
-    float y;
-    float z;
-    float roll;
-    float pitch;
-    float yaw;
-};
 
-typedef std::pair<genericTf, genericTf> err_tf_pair;
-
-struct errStats {
-    float mean; 
-    float dev;
-};
 
 class evaluator
 {
@@ -51,7 +36,7 @@ class evaluator
         const std::string module_name = "[EVALUATOR] ";
 
         std::map< std::string, std::map<std::string, std::vector<err_tf_pair> > > err_tf_map; // agent -> scene -> pair -> error
-        std::map< std::string, std::map<std::string, std::vector<err_tf_pair> > > statStore; // agent -> scene -> pair -> error
+        std::map< std::string, std::map<std::string, stats > > statStore; // agent -> scene -> pair -> error
 
         std::string agent_id, scene_id; 
         std::string parent_frame, child_frame; 

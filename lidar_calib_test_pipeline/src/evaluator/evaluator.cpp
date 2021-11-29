@@ -99,9 +99,9 @@ err_tf_pair evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pr
     gt_m.getRPY(gt_roll, gt_yaw, gt_pitch);
     pred_m.getRPY(pred_roll, pred_yaw, pred_pitch);
 
-    err.x = gt_translation.getX() - pred_translation.getX();
-    err.y = gt_translation.getY() - pred_translation.getY();
-    err.z = gt_translation.getZ() - pred_translation.getZ();
+    err.x = fabs(gt_translation.getX() - pred_translation.getX());
+    err.y = fabs(gt_translation.getY() - pred_translation.getY());
+    err.z = fabs(gt_translation.getZ() - pred_translation.getZ());
     
     err.roll = getCircularDiff(gt_roll, pred_roll);
     err.pitch = getCircularDiff(gt_pitch, pred_pitch);
@@ -123,19 +123,23 @@ void evaluator::compStats()
     {
         std::string cur_agent = agent_scenePair.first;
 
-        for (const auto &scene_err_tf : agent_scenePair.second ) 
+        for (const auto &pcd_combs_from_scene : agent_scenePair.second ) 
         {
-            std::string cur_scene = scene_err_tf.first;
+            std::string cur_scene = pcd_combs_from_scene.first;
+            errT cum_scene_err;
+            tfT cum_scene_tf;
             float pair_dif, sum;
-            for (const auto &err_tf_p : scene_err_tf.second )
+            for (const auto &err_tf_pair_of_pcd : pcd_combs_from_scene.second )
             {
-                
+                cum_scene_err += err_tf_pair_of_pcd.first; // to calculate mean errors for a scene
+                cum_scene_tf += err_tf_pair_of_pcd.second; // to calculate mean tf for a scene
             }
+
+            statStore[cur_agent][cur_scene].err.mean = (cum_scene_err / pcd_combs_from_scene.second.size())
+            statStore[cur_agent][cur_scene].tf.mean = (cum_scene_err / pcd_combs_from_scene.second.size())
         }
     }
-
 }
-
 
 bool evaluator::isNormalized(tf::Quaternion q)
 {
