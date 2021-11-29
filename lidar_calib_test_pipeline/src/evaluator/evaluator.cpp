@@ -7,20 +7,22 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
 
     parent_frame = req.transform.header.frame_id;
     child_frame = req.transform.child_frame_id;
+    agent_id = req.agent;
+    scene_id = req.scene;
 
     ROS_INFO_STREAM("Agent: " << req.agent << " Scene: " << req.scene);
     tf::StampedTransform gt_tf = getGTTF(parent_frame, child_frame);
     tf::Transform result_tf = fromMsg(req.transform);
-    tfError inst_err = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" 
-    ROS_INFO_STREAM( "Transform Error: " << 
-                        inst_err.x << " " <<
-                        inst_err.y << " " <<
-                        inst_err.z << " " << 
-                        inst_err.roll << " " <<
-                        inst_err.pitch << " " <<
-                        inst_err.yaw );
+    err_tf_pair inst_err_tf = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" 
+    // ROS_INFO_STREAM( "Transform Error: " << 
+    //                     inst_err.x << " " <<
+    //                     inst_err.y << " " <<
+    //                     inst_err.z << " " << 
+    //                     inst_err.roll << " " <<
+    //                     inst_err.pitch << " " <<
+    //                     inst_err.yaw );
 
-    error_maps[agent_id][scene_id].push_back(inst_err);
+    err_tf_map[agent_id][scene_id].push_back(inst_err_tf);
 
     std_srvs::SetBool srv;
     if(!data_provider_client.call(srv))
@@ -53,6 +55,15 @@ tf::StampedTransform evaluator::getGTTF(std::string parent_frame, std::string ch
     return transform;
 }
 
+float getDifference(float b1, float b2) {
+	float r = fmod(fabs(b2 - b1), 2*M_PI); 
+	if (r < -M_PI)
+		r += 2*M_PI;
+	if (r >= M_PI)
+		r -= 2*M_PI;
+	return fabs(r);
+}
+
 tf::Transform evaluator::fromMsg(geometry_msgs::TransformStamped received_result)
 {
     tf::Quaternion q( received_result.transform.rotation.x,
@@ -73,9 +84,9 @@ tf::Transform evaluator::fromMsg(geometry_msgs::TransformStamped received_result
     return trans;
 }
 
-tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
+err_tf_pair evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
 {
-    tfError err;
+    genericTf err, result_tf;
     tf::Vector3 gt_translation = tf_gt.getOrigin();
     tf::Vector3 pred_translation = tf_pred.getOrigin();
     tf::Matrix3x3 gt_m(tf_gt.getRotation());
@@ -94,8 +105,35 @@ tfError evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
     err.pitch = (float) (gt_pitch - pred_pitch);
     err.yaw = (float) (gt_yaw - pred_yaw);
 
-    return err;
+    result_tf.x = pred_translation.getX() ; 
+    result_tf.y = pred_translation.getY() ; 
+    result_tf.z = pred_translation.getZ() ; 
+    result_tf.roll = (float)pred_roll ;
+    result_tf.pitch = (float)pred_pitch ;
+    result_tf.yaw = (float)pred_yaw ;
+
+    return std::make_pair(err, result_tf);
 }
+
+void evaluator::compStats()
+{
+    for (const auto &agent_scenePair : err_tf_map ) // agent_scenePair : std::pair< std::string, std::map<std::string, std::vector<err_tf_pair> > >
+    {
+        std::string cur_agent = agent_scenePair.first;
+
+        for (const auto &scene_err_tf : agent_scenePair.second ) 
+        {
+            std::string cur_scene = scene_err_tf.first;
+            float pair_dif, sum;
+            for (const auto &err_tf_p : scene_err_tf.second )
+            {
+                
+            }
+        }
+    }
+
+}
+
 
 bool evaluator::isNormalized(tf::Quaternion q)
 {
