@@ -37,7 +37,7 @@ class evaluator
         tf::StampedTransform getGTTF(std::string parent_frame, std::string child_frame); 
         tf::Transform fromMsg(geometry_msgs::TransformStamped received_result);
         bool isNormalized(tf::Quaternion q);
-        float getDifference(double b1, double b2);
+        float getCircularDiff(double b1, double b2);
 
     private:
         ros::NodeHandle nh_;
@@ -61,7 +61,7 @@ class evaluator
 
 
 /// Stats to be computed;
-//          - std dev of transforms 
-//          - mean of transforms 
+//          - std dev of transforms from the same agent 
+//          - mean of transforms from the same agent
 //          - std_dev of transform errors
 //          - mean of transform errors

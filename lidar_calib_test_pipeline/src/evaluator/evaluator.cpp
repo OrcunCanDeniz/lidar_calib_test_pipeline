@@ -55,7 +55,8 @@ tf::StampedTransform evaluator::getGTTF(std::string parent_frame, std::string ch
     return transform;
 }
 
-float getDifference(float b1, float b2) {
+float getCircularDiff(float b1, float b2) 
+{
 	float r = fmod(fabs(b2 - b1), 2*M_PI); 
 	if (r < -M_PI)
 		r += 2*M_PI;
@@ -63,6 +64,7 @@ float getDifference(float b1, float b2) {
 		r -= 2*M_PI;
 	return fabs(r);
 }
+
 
 tf::Transform evaluator::fromMsg(geometry_msgs::TransformStamped received_result)
 {
@@ -101,9 +103,9 @@ err_tf_pair evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pr
     err.y = gt_translation.getY() - pred_translation.getY();
     err.z = gt_translation.getZ() - pred_translation.getZ();
     
-    err.roll = (float) (gt_roll - pred_roll);
-    err.pitch = (float) (gt_pitch - pred_pitch);
-    err.yaw = (float) (gt_yaw - pred_yaw);
+    err.roll = getCircularDiff(gt_roll, pred_roll);
+    err.pitch = getCircularDiff(gt_pitch, pred_pitch);
+    err.yaw = getCircularDiff(gt_yaw, pred_yaw);
 
     result_tf.x = pred_translation.getX() ; 
     result_tf.y = pred_translation.getY() ; 
