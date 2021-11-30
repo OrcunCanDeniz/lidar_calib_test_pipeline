@@ -126,8 +126,7 @@ void evaluator::compStats()
         for (const auto &pcd_combs_from_scene : agent_scenePair.second ) 
         {
             std::string cur_scene = pcd_combs_from_scene.first;
-            errT cum_scene_err;
-            tfT cum_scene_tf;
+            genericT cum_scene_err, cum_scene_tf;
             float pair_dif, sum;
             for (const auto &err_tf_pair_of_pcd : pcd_combs_from_scene.second )
             {
@@ -135,8 +134,9 @@ void evaluator::compStats()
                 cum_scene_tf += err_tf_pair_of_pcd.second; // to calculate mean tf for a scene
             }
 
-            statStore[cur_agent][cur_scene].err.mean = (cum_scene_err / pcd_combs_from_scene.second.size())
-            statStore[cur_agent][cur_scene].tf.mean = (cum_scene_err / pcd_combs_from_scene.second.size())
+            statStore[cur_agent][cur_scene].err.mean = cum_scene_err.getMean();
+            statStore[cur_agent][cur_scene].err.dev = cum_scene_err.getStDev();
+            statStore[cur_agent][cur_scene].tf.mean = cum_scene_tf.getMean();
         }
     }
 }
