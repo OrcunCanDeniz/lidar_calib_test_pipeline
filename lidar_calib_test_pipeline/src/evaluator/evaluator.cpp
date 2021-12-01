@@ -29,6 +29,7 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
     {
         end_of_dataset = true; // returns false when dataset is finished 
         ROS_WARN_STREAM(module_name << "End of dataset!");
+        dumpStats();
     }  
 
     res.ret = true;
@@ -122,23 +123,28 @@ void evaluator::compStats()
     for (const auto &agent_scenePair : err_tf_map ) // agent_scenePair : std::pair< std::string, std::map<std::string, std::vector<err_tf_pair> > >
     {
         std::string cur_agent = agent_scenePair.first;
-
+        err_tf_pair agent_err_tf;
         for (const auto &pcd_combs_from_scene : agent_scenePair.second ) 
         {
             std::string cur_scene = pcd_combs_from_scene.first;
+            err_tf_pair cum_scene_err_tf;
             genericT cum_scene_err, cum_scene_tf;
-            float pair_dif, sum;
             for (const auto &err_tf_pair_of_pcd : pcd_combs_from_scene.second)
             {
-                cum_scene_err += err_tf_pair_of_pcd.first; // accumulate data
-                cum_scene_tf += err_tf_pair_of_pcd.second; // 
+                cum_scene_err_tf.first += err_tf_pair_of_pcd.first; // accumulate data in scene
+                cum_scene_err_tf.second += err_tf_pair_of_pcd.second; 
             }
-
-            statStore[cur_agent][cur_scene].err.mean = cum_scene_err.getMean();
+            agent_err_tf.first += cum_scene_err; // accumulate scenes' data into agent based stat container
+            agent_err_tf.second += cum_scene_tf; 
+            statStore[cur_agent][cur_scene].err.mean = cum_scene_err.getMean(); // calculate scene's stats and store
             statStore[cur_agent][cur_scene].err.dev = cum_scene_err.getStDev();
             statStore[cur_agent][cur_scene].tf.mean = cum_scene_tf.getMean();
             statStore[cur_agent][cur_scene].tf.dev = cum_scene_tf.getStDev();
         }
+        agent_stats[cur_agent].tf.mean = agent_err_tf.first.getMean(); //calculate agent stats from accumulated data
+        agent_stats[cur_agent].tf.dev = agent_err_tf.first.getStDev();
+        agent_stats[cur_agent].err.mean = agent_err_tf.second.getMean();
+        agent_stats[cur_agent].err.dev = agent_err_tf.second.getStDev();
     }
 }
 
@@ -147,18 +153,24 @@ bool evaluator::isNormalized(tf::Quaternion q)
     return q.length() == 1;
 }
 
-// void evaluator::callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type)
-// {
-//     frame_type_to_id_m[frame_type] = msg->header.frame_id;
-    
-//     if (frame_type == "parent")
-//     {
-//         agent_id = msg->agent;
-//         scene_id = msg->scene;
-//     }
-//     ROS_INFO("CB DONE");
-// }
+void evaluator::dumpStats()
+{
+    for (const auto &agent_scenePair : statStore ) // agent_scenePair : std::pair< std::string, std::map<std::string, std::vector<err_tf_pair> > >
+    {
+        std::string cur_agent = agent_scenePair.first;
 
+        for (const auto &scene_statPair : agent_scenePair.second ) 
+        {
+            std::string cur_scene = scene_statPair.first;
+            io_utils::addStat(cur_agent, cur_scene, scene_statPair.second);
+        }
+
+        io_utils::prettyPrint(cur_agent, agent_stats[cur_agent]);  
+     
+    }
+
+    io_utils::writeCsv();
+}
 
 evaluator::evaluator()
 {

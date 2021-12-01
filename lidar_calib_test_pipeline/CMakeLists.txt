@@ -128,18 +128,10 @@ include_directories(
 
 set(CMAKE_CXX_STANDARD 11)
 
-## Declare a C++ library
-add_library(data_handler_lib
-  src/data_handler_server/data_handler.cpp
-)
-
-add_library(extrinsic_lib
-  src/extrinsics_parser.cpp
-)
-
+## build data handler 
+add_library(extrinsic_lib src/extrinsics_parser.cpp)
+add_library(data_handler_lib src/data_handler_server/data_handler.cpp)
 add_executable(data_handling_server src/data_handler_server/data_handler_server_node.cpp)
-
-## Specify libraries to link a library or executable target against
 target_link_libraries(data_handling_server
   ${catkin_LIBRARIES}
   data_handler_lib
@@ -148,18 +140,20 @@ target_link_libraries(data_handling_server
   stdc++fs
   yaml-cpp
 )
-
 add_dependencies(data_handling_server ${catkin_EXPORTED_TARGETS})
 
+
+## build evaluator
+add_library(io_lib src/io_utils.cpp)
 add_library(evaluator_lib src/evaluator/evaluator.cpp)
-
 add_executable(evaluator src/evaluator/evaluator_node.cpp)
-
 target_link_libraries(evaluator
   evaluator_lib
+  io_lib
   ${catkin_LIBRARIES}
 )
 
+## build dummy calibrator
 add_executable(calibrator src/dummy_calibrator.cpp)
 target_link_libraries(calibrator
   ${catkin_LIBRARIES}
