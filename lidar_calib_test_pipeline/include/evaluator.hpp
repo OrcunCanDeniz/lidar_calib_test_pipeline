@@ -7,7 +7,8 @@
 #include "lidar_calib_test_comms/test_pointcloud.h"
 #include "lidar_calib_test_comms/calib_result.h"
 #include "std_srvs/SetBool.h"
-#include "types.hpp"
+
+#include "types.hpp" // custom transform type with custom rotation, translation 
 
 
 
@@ -16,13 +17,13 @@ class evaluator
     public:
         evaluator();
         err_tf_pair compError(tf::StampedTransform tf_gt, tf::Transform tf_pred);
-        void compStats(); // TODO: Compute standard deviation of tfs.
+        void compStats(); 
         bool serve(lidar_calib_test_comms::calib_result::Request &req, lidar_calib_test_comms::calib_result::Response &res);
         // void callback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& msg, const std::string frame_type);
         tf::StampedTransform getGTTF(std::string parent_frame, std::string child_frame); 
         tf::Transform fromMsg(geometry_msgs::TransformStamped received_result);
         bool isNormalized(tf::Quaternion q);
-        float getCircularDiff(double b1, double b2);
+        float getCircularDiff(float b1, float b2);
 
     private:
         ros::NodeHandle nh_;
@@ -43,8 +44,6 @@ class evaluator
         
         tf::TransformListener listener;
 };
-
-
 /// Stats to be computed;
 //          - std dev of transforms from the same agent 
 //          - mean of transforms from the same agent

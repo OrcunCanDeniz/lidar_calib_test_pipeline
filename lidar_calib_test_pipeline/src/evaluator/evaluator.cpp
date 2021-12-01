@@ -55,7 +55,7 @@ tf::StampedTransform evaluator::getGTTF(std::string parent_frame, std::string ch
     return transform;
 }
 
-float getCircularDiff(float b1, float b2) 
+float evaluator::getCircularDiff(float b1, float b2) 
 {
 	float r = fmod(fabs(b2 - b1), 2*M_PI); 
 	if (r < -M_PI)
@@ -88,7 +88,7 @@ tf::Transform evaluator::fromMsg(geometry_msgs::TransformStamped received_result
 
 err_tf_pair evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
 {
-    genericTf err, result_tf;
+    genericT err, result_tf;
     tf::Vector3 gt_translation = tf_gt.getOrigin();
     tf::Vector3 pred_translation = tf_pred.getOrigin();
     tf::Matrix3x3 gt_m(tf_gt.getRotation());
@@ -99,20 +99,20 @@ err_tf_pair evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pr
     gt_m.getRPY(gt_roll, gt_yaw, gt_pitch);
     pred_m.getRPY(pred_roll, pred_yaw, pred_pitch);
 
-    err.x = fabs(gt_translation.getX() - pred_translation.getX());
-    err.y = fabs(gt_translation.getY() - pred_translation.getY());
-    err.z = fabs(gt_translation.getZ() - pred_translation.getZ());
+    err.trans.x = fabs(gt_translation.getX() - pred_translation.getX());
+    err.trans.y = fabs(gt_translation.getY() - pred_translation.getY());
+    err.trans.z = fabs(gt_translation.getZ() - pred_translation.getZ());
     
-    err.roll = getCircularDiff(gt_roll, pred_roll);
-    err.pitch = getCircularDiff(gt_pitch, pred_pitch);
-    err.yaw = getCircularDiff(gt_yaw, pred_yaw);
+    err.rot.roll = getCircularDiff(gt_roll, pred_roll);
+    err.rot.pitch = getCircularDiff(gt_pitch, pred_pitch);
+    err.rot.yaw = getCircularDiff(gt_yaw, pred_yaw);
 
-    result_tf.x = pred_translation.getX() ; 
-    result_tf.y = pred_translation.getY() ; 
-    result_tf.z = pred_translation.getZ() ; 
-    result_tf.roll = (float)pred_roll ;
-    result_tf.pitch = (float)pred_pitch ;
-    result_tf.yaw = (float)pred_yaw ;
+    result_tf.trans.x = pred_translation.getX() ; 
+    result_tf.trans.y = pred_translation.getY() ; 
+    result_tf.trans.z = pred_translation.getZ() ; 
+    result_tf.rot.roll = (float)pred_roll ;
+    result_tf.rot.pitch = (float)pred_pitch ;
+    result_tf.rot.yaw = (float)pred_yaw ;
 
     return std::make_pair(err, result_tf);
 }
@@ -128,15 +128,16 @@ void evaluator::compStats()
             std::string cur_scene = pcd_combs_from_scene.first;
             genericT cum_scene_err, cum_scene_tf;
             float pair_dif, sum;
-            for (const auto &err_tf_pair_of_pcd : pcd_combs_from_scene.second )
+            for (const auto &err_tf_pair_of_pcd : pcd_combs_from_scene.second)
             {
-                cum_scene_err += err_tf_pair_of_pcd.first; // to calculate mean errors for a scene
-                cum_scene_tf += err_tf_pair_of_pcd.second; // to calculate mean tf for a scene
+                cum_scene_err += err_tf_pair_of_pcd.first; // accumulate data
+                cum_scene_tf += err_tf_pair_of_pcd.second; // 
             }
 
             statStore[cur_agent][cur_scene].err.mean = cum_scene_err.getMean();
             statStore[cur_agent][cur_scene].err.dev = cum_scene_err.getStDev();
             statStore[cur_agent][cur_scene].tf.mean = cum_scene_tf.getMean();
+            statStore[cur_agent][cur_scene].tf.dev = cum_scene_tf.getStDev();
         }
     }
 }

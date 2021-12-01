@@ -1,32 +1,35 @@
 #include <math.h>
-#include <string>
 #include <algorithm>
 
+/* 
+    Custom implementation of transform with custom rotation and translation 
+    to ease mean and standard deviation calculations.
+*/
 
 struct rotation {
-    private:
     float sin_roll, cos_roll;
     float sin_pitch, cos_pitch;
     float sin_yaw, cos_yaw;
     float add_count;
-
-    public:
     float roll;
     float pitch;
     float yaw;
 
     rotation(float roll=0, float pitch=0, float yaw=0): roll(roll), pitch(pitch), yaw(yaw){}
 
-    rotation& operator=(const rotation& a) //common
+    rotation& operator=(const rotation& a) 
     {
         roll = a.roll;
         pitch = a.pitch;
         yaw = a.yaw;
+        add_count = a.add_count;
         return *this;
     }
 
-    void operator+=(const rotation& a) // err
-    {
+    void operator+=(const rotation& a) 
+    { 
+    // Accumulate rotation data by casting it on unit circle for each axis
+
         sin_roll += sin(a.roll);
         cos_roll += cos(a.roll); 
         sin_pitch += sin(a.pitch);
@@ -37,8 +40,11 @@ struct rotation {
         add_count++;
     }
 
-    rotation stDev()
-    { //numpy implementation 0 and pi
+    rotation getStDev()
+    { 
+    //scipy implementation of single pass, circular standard deviation
+    //https://github.com/scipy/scipy/blob/41dd89916870ea215f612727ecf42d12ea434657/scipy/stats/_morestats.py#L3599
+
         rotation ret;
 
         float mean_sin_roll = sin_roll / add_count;
@@ -60,8 +66,10 @@ struct rotation {
         return ret;
     }
 
-    rotation mean()
+    rotation getMean()
     {
+    //scipy implementation of single pass, circular data mean
+    //https://github.com/scipy/scipy/blob/41dd89916870ea215f612727ecf42d12ea434657/scipy/stats/_morestats.py#L3546
         rotation ret;
         
         ret.roll = atan2(sin_roll , cos_roll);
@@ -73,50 +81,62 @@ struct rotation {
 };
 
 struct translation {
-    private:
+        float x_sq_sum = 0; // sum of squares are needed for the single pass standard dev algorithm
+        float y_sq_sum = 0;
+        float z_sq_sum = 0;
         float add_count = 0;
-        void rollingSum(translation other)
-        {
-            x += other.x;
-            y += other.y;
-            z += other.z;
-        }
-        void addDiff(translation other)
-        { // add (t-t')^2 to x,y,z respectively
-
-        }
-
-    public:
-
         float x;
         float y;
         float z;
 
-        translation(float x=0, float y=0, float z=0): x(x), y(y), z(z){}
+        translation(float x=0, float y=0, float z=0, float x_sq_sum=0, float y_sq_sum=0, float z_sq_sum=0): x(x), y(y), z(z),
+                                                                    x_sq_sum(x_sq_sum), y_sq_sum(y_sq_sum), z_sq_sum(z_sq_sum) {}
 
         translation& operator=(const translation& a) //common
         {
             x = a.x;
             y = a.y;
             z = a.z;
+            add_count = a.add_count;
             return *this;
         }
 
         void operator+=(translation a)
-       {
-           x += a.x;
-           y += a.y;
-           z += a.z;
-// https://www.strchr.com/standard_deviation_in_one_pass
-           add_count++;
-       }
+        {
+            x += a.x;
+            y += a.y;
+            z += a.z;
 
-        translation& mean() 
+            x_sq_sum += a.x * a.x;
+            y_sq_sum += a.y * a.y;
+            z_sq_sum += a.z * a.z;
+
+            add_count++;
+        }
+
+        translation getMean() 
         {
             translation ret;
-            ret.x /= add_count; 
-            ret.y /= add_count; 
-            ret.z /= add_count; 
+            ret.x =  x/add_count; 
+            ret.y =  y/add_count; 
+            ret.z =  z/add_count; 
+            return ret;
+        }
+
+        translation getStDev()
+        {
+        // Single pass standard deviation algorithm from https://www.strchr.com/standard_deviation_in_one_pass
+            translation ret;
+            translation avg = this->getMean();
+
+            float variance_x = x_sq_sum / add_count - avg.x*avg.x;
+            float variance_y = y_sq_sum / add_count - avg.y*avg.y;
+            float variance_z = z_sq_sum / add_count - avg.z*avg.z;
+
+            ret.x = sqrt(variance_x);
+            ret.y = sqrt(variance_y);
+            ret.z = sqrt(variance_z);
+
             return ret;
         }
 };
@@ -124,31 +144,28 @@ struct translation {
 
 struct genericT 
 {
-    public:
-        translation trans;
-        rotation rot;
-    
-    private:
-        float sin_roll, cos_roll;
-        float sin_pitch, cos_pitch;
-        float sin_yaw, cos_yaw;
-        float add_count;
+    translation trans;
+    rotation rot;
+    float add_count;
 
-    genericT( float x=0, float y=0, float z=0, float roll=0, float pitch=0, float yaw=0, float access_count=0) 
-        : sin_roll(0), cos_roll(0), sin_pitch(0), cos_pitch(0), sin_yaw(0), cos_yaw(0), add_count(0)
+    genericT( float x=0, float y=0, float z=0, float roll=0, float pitch=0, float yaw=0, float add_count=0) 
+        : add_count(0)
     {
         trans.x = x; 
         trans.y = y; 
         trans.z = z; 
+        trans.add_count = add_count; 
         rot.roll = roll; 
         rot.pitch = pitch; 
         rot.yaw = yaw;   
+        rot.add_count = add_count; 
     }
 
     genericT& operator=(const genericT& a) //common
     {
         trans = a.trans;
         rot = a.rot;
+        add_count = a.add_count;
         return *this;
     }
 
@@ -166,22 +183,26 @@ struct genericT
         add_count++;
     }
 
+    // Process rotation and translation seperately since they hold periodic and non-periodic data respectively.
+    // Different methods for these stats are already exclusively implemented in those types.
     genericT getMean()
     {
         genericT ret;
-        ret.rot = rot.mean();
-        ret.trans = trans.mean();
+        ret.rot = rot.getMean();
+        ret.trans = trans.getMean();
+        return ret;
     }
 
     genericT getStDev()
     {
         genericT ret;
-        ret.rot = rot.stDev();
-        ret.trans = trans.stDev();
+        ret.rot = rot.getStDev();
+        ret.trans = trans.getStDev();
+        return ret;
     }
 };
 
-
+// First object of this pair will hold error, second one will hold the transform that the error was calculated from
 typedef std::pair<genericT, genericT> err_tf_pair;
 
 struct statType 
@@ -195,67 +216,3 @@ struct stats
     statType tf;
     statType err;
 };
-
-
-
-// genericT operator+(const genericT& a) const 
-// {
-//     return genericT(a.x+x, a.y+y, a.z+z, a.roll+roll, a.pitch+pitch, a.yaw+yaw);
-// }
-
-
-// struct errT:genericT 
-// {
-//     void operator+=(const genericT& a) // err
-//     {
-//         x+=a.x;
-//         y+=a.y;
-//         z+=a.z;
-//         roll += a.roll;
-//         pitch += a.pitch;
-//         yaw += a.yaw;
-//     }
-// };
-
-
-// struct tfT:genericT 
-// {
-//     void operator+=(const tfT& a) // tf 
-//     {
-//         x+=a.x;
-//         y+=a.y;
-//         z+=a.z;
-//         roll += sin(roll) + sin(a.roll), cos(roll) + cos(a.roll);
-//         pitch += sin(pitch) + sin(a.pitch), cos(pitch) + cos(a.pitch);
-//         yaw += sin(yaw) + sin(a.yaw), cos(yaw) + cos(a.yaw);
-//     }
-// };
-
-// genericT getCircStd()
-// { //numpy implementation 0 and pi
-//     genericT ret;
-//     ret.x = x / add_count;
-//     ret.y = y / add_count;
-//     ret.z = z / add_count;
-
-//     float mean_sin_roll = sin_roll / add_count;
-//     float mean_sin_pitch = sin_pitch / add_count;
-//     float mean_sin_yaw = sin_yaw / add_count;
-
-//     float mean_cos_roll = cos_roll / add_count;
-//     float mean_cos_pitch = cos_pitch / add_count;
-//     float mean_cos_yaw = cos_yaw / add_count;
-    
-//     float roll_R = std::min(1.0f, hypot(mean_sin_roll, mean_cos_roll));
-//     float pitch_R = std::min(1.0f, hypot(mean_sin_pitch, mean_cos_pitch));
-//     float yaw_R = std::min(1.0f, hypot(mean_sin_yaw, mean_cos_yaw));
-    
-//     ret.roll = sqrt(-2 * log(roll_R)) ;
-//     ret.pitch = sqrt(-2 * log(pitch_R)) ;
-//     ret.yaw = sqrt(-2 * log(yaw_R)) ;
-    
-//     return ret;
-
-
-
-// sqrt(-2 * log(sqrt(sum(Sin2)^2 + sum(Cos2)^2) / length(Rad2)))
