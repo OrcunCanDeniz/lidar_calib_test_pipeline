@@ -2,3 +2,4 @@
 *.py
 trials/
 *.png
+**/build/**
