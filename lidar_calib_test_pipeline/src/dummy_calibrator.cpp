@@ -61,7 +61,6 @@ void dummy_calibrator::pcCallback(const lidar_calib_test_comms::test_pointcloud:
     tf_empty.transform.translation.z = 2;
     tf_empty.header.stamp = ros::Time::now();
 
-
     srv.request.transform = tf_empty;
     srv.request.agent = parent_msg->agent;
     srv.request.scene = parent_msg->scene;

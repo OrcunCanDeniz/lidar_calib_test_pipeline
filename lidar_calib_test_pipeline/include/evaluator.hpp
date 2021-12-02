@@ -38,8 +38,8 @@ class evaluator
         const std::string module_name = "[EVALUATOR] ";
 
         std::map< std::string, std::map<std::string, std::vector<err_tf_pair> > > err_tf_map; // agent -> scene -> pair -> error
-        std::map< std::string, std::map<std::string, stats > > statStore; // agent -> scene -> pair -> error
-        std::map< std::string, stats> agent_stats;
+        std::map< std::string, std::map<std::string, statType > > statStore; // agent -> scene -> pair -> error
+        std::map< std::string, statType> agent_stats;
         genericT overall_tf_stat, overall_err_stat;
 
         std::string agent_id, scene_id; 

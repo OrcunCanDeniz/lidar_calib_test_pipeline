@@ -37,8 +37,8 @@ struct rotation {
         cos_roll += cos(a.roll); 
         sin_pitch += sin(a.pitch);
         cos_pitch += cos(a.pitch);
-        sin_yaw += sin(a.pitch);
-        cos_yaw += cos(a.pitch);
+        sin_yaw += sin(a.yaw);
+        cos_yaw += cos(a.yaw);
 
         add_count++;
     }
@@ -184,6 +184,32 @@ struct genericT
         trans += a.trans;
 
         add_count++;
+    }
+
+    void accumulate(genericT a)
+    {
+        trans.x += a.trans.x;
+        trans.y += a.trans.y;
+        trans.z += a.trans.z;
+        trans.x_sq_sum += a.trans.x_sq_sum;
+        trans.y_sq_sum += a.trans.y_sq_sum;
+        trans.z_sq_sum += a.trans.z_sq_sum;
+
+        rot.sin_roll += a.rot.sin_roll; 
+        rot.cos_roll += a.rot.cos_roll; 
+        rot.sin_pitch += a.rot.sin_pitch; 
+        rot.cos_pitch += a.rot.cos_pitch; 
+        rot.sin_yaw += a.rot.sin_yaw; 
+        rot.cos_yaw += a.rot.cos_yaw; 
+        rot.roll += a.rot.roll; 
+        rot.pitch += a.rot.pitch; 
+        rot.yaw += a.rot.yaw; 
+
+        add_count += a.add_count;
+
+        trans.add_count += a.trans.add_count;
+        rot.add_count += a.rot.add_count;
+
     }
 
     // Process rotation and translation seperately since they hold periodic and non-periodic data respectively.

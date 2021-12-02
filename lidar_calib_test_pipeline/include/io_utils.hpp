@@ -13,8 +13,8 @@ namespace io_utils
 {
     std::stringstream stats_csv;
 
-    void addStat(std::string agent, std::string scene, stats stat);
+    void addStat(std::string agent, std::string scene, statType stat);
     std::string stamp();
-    void prettyPrint(std::string agent_name, stats stat);
+    void prettyPrint(std::string agent_name, statType stat);
     void writeCsv();
 }
