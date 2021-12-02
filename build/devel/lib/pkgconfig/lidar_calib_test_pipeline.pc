@@ -1,0 +1,8 @@
+prefix=/home/orcun/test_ws/src/lidar_calib_tester/build/devel
+
+Name: lidar_calib_test_pipeline
+Description: Description of lidar_calib_test_pipeline
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: message_runtime pcl_conversions pcl_ros roscpp sensor_msgs std_msgs message_runtime

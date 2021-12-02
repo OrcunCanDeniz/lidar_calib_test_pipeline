@@ -56,6 +56,9 @@ void dummy_calibrator::pcCallback(const lidar_calib_test_comms::test_pointcloud:
     tf_empty.header.frame_id = parent_msg->header.frame_id;
     tf_empty.child_frame_id = child_msg->header.frame_id;
     tf_empty.transform.rotation.w = 1;
+    tf_empty.transform.translation.x = 2;
+    tf_empty.transform.translation.y = 2;
+    tf_empty.transform.translation.z = 2;
     tf_empty.header.stamp = ros::Time::now();
 
 

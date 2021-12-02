@@ -28,7 +28,9 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
     if(!data_provider_client.call(srv))
     {
         end_of_dataset = true; // returns false when dataset is finished 
-        ROS_WARN_STREAM(module_name << "End of dataset!");
+        ROS_WARN_STREAM(module_name << "End of dataset! Calculating statistics ... ");
+        compStats();
+        ROS_INFO("Writing stats ...");
         dumpStats();
     }  
 
@@ -46,7 +48,7 @@ tf::StampedTransform evaluator::getGTTF(std::string parent_frame, std::string ch
     tf::StampedTransform transform;
     try
     {
-        listener.waitForTransform(parent_frame, child_frame, ros::Time(0), ros::Duration(10.0));
+        listener.waitForTransform(parent_frame, child_frame, ros::Time(0), ros::Duration(10.0)); //target: parent, source:child 
         listener.lookupTransform(parent_frame, child_frame, ros::Time(0), transform);
     } catch (tf::TransformException ex) {
         ROS_ERROR("%s",ex.what());
@@ -128,23 +130,22 @@ void evaluator::compStats()
         {
             std::string cur_scene = pcd_combs_from_scene.first;
             err_tf_pair cum_scene_err_tf;
-            genericT cum_scene_err, cum_scene_tf;
             for (const auto &err_tf_pair_of_pcd : pcd_combs_from_scene.second)
             {
                 cum_scene_err_tf.first += err_tf_pair_of_pcd.first; // accumulate data in scene
                 cum_scene_err_tf.second += err_tf_pair_of_pcd.second; 
             }
-            agent_err_tf.first += cum_scene_err; // accumulate scenes' data into agent based stat container
-            agent_err_tf.second += cum_scene_tf; 
-            statStore[cur_agent][cur_scene].err.mean = cum_scene_err.getMean(); // calculate scene's stats and store
-            statStore[cur_agent][cur_scene].err.dev = cum_scene_err.getStDev();
-            statStore[cur_agent][cur_scene].tf.mean = cum_scene_tf.getMean();
-            statStore[cur_agent][cur_scene].tf.dev = cum_scene_tf.getStDev();
+            agent_err_tf.first += cum_scene_err_tf.first; // accumulate scenes' data into agent based stat container
+            agent_err_tf.second += cum_scene_err_tf.second; 
+            statStore[cur_agent][cur_scene].err.mean = cum_scene_err_tf.first.getMean(); // calculate scene's stats and store
+            statStore[cur_agent][cur_scene].err.dev = cum_scene_err_tf.first.getStDev();
+            statStore[cur_agent][cur_scene].tf.mean = cum_scene_err_tf.second.getMean();
+            statStore[cur_agent][cur_scene].tf.dev = cum_scene_err_tf.second.getStDev();
         }
-        agent_stats[cur_agent].tf.mean = agent_err_tf.first.getMean(); //calculate agent stats from accumulated data
-        agent_stats[cur_agent].tf.dev = agent_err_tf.first.getStDev();
-        agent_stats[cur_agent].err.mean = agent_err_tf.second.getMean();
-        agent_stats[cur_agent].err.dev = agent_err_tf.second.getStDev();
+        agent_stats[cur_agent].err.mean = agent_err_tf.first.getMean();
+        agent_stats[cur_agent].err.dev = agent_err_tf.first.getStDev();
+        agent_stats[cur_agent].tf.mean = agent_err_tf.second.getMean(); //calculate agent stats from accumulated data
+        agent_stats[cur_agent].tf.dev = agent_err_tf.second.getStDev();
     }
 }
 
@@ -177,4 +178,15 @@ evaluator::evaluator()
     ros::NodeHandle private_nh("~");
     service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
     data_provider_client = private_nh.serviceClient<std_srvs::SetBool>("/data_provider_node/provide_pc_data");
+}
+
+
+int main(int argc, char** argv)
+{
+    ros::init(argc, argv, "evaluator");
+    evaluator app;
+
+    ros::spin();
+
+    return 0;
 }

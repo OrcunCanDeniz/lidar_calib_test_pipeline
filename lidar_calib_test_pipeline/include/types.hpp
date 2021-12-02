@@ -16,7 +16,9 @@ struct rotation {
     float pitch;
     float yaw;
 
-    rotation(float roll=0, float pitch=0, float yaw=0): roll(roll), pitch(pitch), yaw(yaw){}
+    rotation(float roll=0, float pitch=0, float yaw=0, float sin_roll=0, float cos_roll=0,
+            float sin_pitch=0, float cos_pitch=0, float sin_yaw=0, float cos_yaw = 0 ): roll(roll), pitch(pitch), yaw(yaw),
+    sin_roll(sin_roll), cos_roll(cos_roll), sin_pitch(sin_pitch), cos_pitch(cos_pitch), sin_yaw(sin_yaw), cos_yaw(cos_yaw){}
 
     rotation& operator=(const rotation& a) 
     {
@@ -90,8 +92,8 @@ struct translation {
         float y;
         float z;
 
-        translation(float x=0, float y=0, float z=0, float x_sq_sum=0, float y_sq_sum=0, float z_sq_sum=0): x(x), y(y), z(z),
-                                                                    x_sq_sum(x_sq_sum), y_sq_sum(y_sq_sum), z_sq_sum(z_sq_sum) {}
+        translation(float x=0, float y=0, float z=0, float x_sq_sum=0, float y_sq_sum=0, float z_sq_sum=0): 
+                x(x), y(y), z(z), x_sq_sum(x_sq_sum), y_sq_sum(y_sq_sum), z_sq_sum(z_sq_sum) {}
 
         translation& operator=(const translation& a) //common
         {
