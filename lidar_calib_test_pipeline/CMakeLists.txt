@@ -58,10 +58,10 @@ add_dependencies(data_handling_server ${catkin_EXPORTED_TARGETS})
 
 ## build evaluator
 add_library(io_lib src/io_utils.cpp)
-# add_library(evaluator_lib src/evaluator/evaluator.cpp)
-add_executable(evaluator src/evaluator/evaluator.cpp)
+add_library(evaluator_lib src/evaluator/evaluator.cpp)
+add_executable(evaluator src/evaluator/evaluator_node.cpp)
 target_link_libraries(evaluator
-  # evaluator_lib
+  evaluator_lib
   io_lib
   ${catkin_LIBRARIES}
 )

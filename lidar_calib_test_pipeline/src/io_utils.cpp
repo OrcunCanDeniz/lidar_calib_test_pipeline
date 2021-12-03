@@ -3,6 +3,9 @@
 #include <ros/package.h>
 #include "ros/ros.h"
 
+
+// TODO: Add title row to result csv
+
 namespace io_utils
 {
     void prettyPrint(std::string agent_name, statType stat)
@@ -61,7 +64,7 @@ namespace io_utils
         std::string pkg_path = ros::package::getPath("lidar_calib_test_pipeline");
         std::string save_dir = pkg_path + "/test_runs/" + filename;
         std::ofstream csv_file( save_dir ); // create file on disk
-        ROS_INFO_STREAM("Dumping stats to: " << save_dir);
+        ROS_INFO_STREAM("\nDumping stats to: " << save_dir);
         csv_file << stats_csv.str(); // dump stats in file
         csv_file.close(); // Close the file
     }

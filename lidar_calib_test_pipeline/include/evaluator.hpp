@@ -17,7 +17,7 @@ class evaluator
 {
     public:
         evaluator();
-        err_tf_pair compError(tf::StampedTransform tf_gt, tf::Transform tf_pred);
+        genericT compError(tf::StampedTransform tf_gt, tf::Transform tf_pred);
         void compStats(); 
         void dumpStats();
         bool serve(lidar_calib_test_comms::calib_result::Request &req, lidar_calib_test_comms::calib_result::Response &res);
@@ -30,25 +30,17 @@ class evaluator
         ros::NodeHandle nh_;
         ros::ServiceServer service; // this service will be called from calibrator
         ros::ServiceClient data_provider_client;
-
-        ros::Subscriber parentPc_sub, childPc_sub; 
         
         bool end_of_dataset = false;
 
         const std::string module_name = "[EVALUATOR] ";
 
-        std::map< std::string, std::map<std::string, std::vector<err_tf_pair> > > err_tf_map; // agent -> scene -> pair -> error
+        std::map< std::string, std::map<std::string, std::vector<genericT> > > err_map; // agent -> scene -> pair -> error
         std::map< std::string, std::map<std::string, statType > > statStore; // agent -> scene -> pair -> error
         std::map< std::string, statType> agent_stats;
-        genericT overall_tf_stat, overall_err_stat;
 
         std::string agent_id, scene_id; 
         std::string parent_frame, child_frame; 
         
         tf::TransformListener listener;
 };
-/// Stats to be computed;
-//          - std dev of transforms from the same agent 
-//          - mean of transforms from the same agent
-//          - std_dev of transform errors
-//          - mean of transform errors

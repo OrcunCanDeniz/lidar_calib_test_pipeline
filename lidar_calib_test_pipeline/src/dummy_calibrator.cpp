@@ -20,6 +20,7 @@ class dummy_calibrator
         void pcCallback(const lidar_calib_test_comms::test_pointcloud::ConstPtr& child_msg, const lidar_calib_test_comms::test_pointcloud::ConstPtr& parent_msg);
     
     private:
+        int cnt = 0;
         ros::NodeHandle nh_;
         // ros::Subscriber parent_sub, child_sub;
         ros::ServiceClient error_service_client;
@@ -55,10 +56,22 @@ void dummy_calibrator::pcCallback(const lidar_calib_test_comms::test_pointcloud:
 
     tf_empty.header.frame_id = parent_msg->header.frame_id;
     tf_empty.child_frame_id = child_msg->header.frame_id;
-    tf_empty.transform.rotation.w = 1;
-    tf_empty.transform.translation.x = 2;
-    tf_empty.transform.translation.y = 2;
-    tf_empty.transform.translation.z = 2;
+    if (cnt % 2 == 0)
+    {
+        tf_empty.transform.translation.x = 2;
+        tf_empty.transform.translation.y = 2;
+        tf_empty.transform.translation.z = 2;
+        tf_empty.transform.rotation.w = 1;
+    } else {
+        tf_empty.transform.translation.x = 2.5;
+        tf_empty.transform.translation.y = 2.5;
+        tf_empty.transform.translation.z = 2.5;
+        tf_empty.transform.rotation.x =0.707 ;
+        tf_empty.transform.rotation.y =0.0 ;
+        tf_empty.transform.rotation.z =0.707 ;
+        tf_empty.transform.rotation.w =0.0 ;
+    }
+    cnt ++;
     tf_empty.header.stamp = ros::Time::now();
 
     srv.request.transform = tf_empty;

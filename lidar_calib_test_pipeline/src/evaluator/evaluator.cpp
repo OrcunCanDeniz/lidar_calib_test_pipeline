@@ -1,5 +1,10 @@
 #include "evaluator.hpp"
 
+/// Stats to be computed;
+//          - std_dev of transform errors
+//          - mean of transform errors
+
+
 bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_calib_test_comms::calib_result::Response &res)   
 // input parameter is tf_eval_srv: result_tf
 {
@@ -13,12 +18,12 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
     ROS_INFO_STREAM("Agent: " << req.agent << " Scene: " << req.scene);
     tf::StampedTransform gt_tf = getGTTF(parent_frame, child_frame);
     tf::Transform result_tf = fromMsg(req.transform);
-    err_tf_pair inst_err = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" 
+    genericT inst_err = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" 
     ROS_INFO_STREAM( "Transform Error: "  
-                    << inst_err.first.trans.x << " " << inst_err.first.trans.y << " " << inst_err.first.trans.z << " " 
-                    << inst_err.first.rot.roll << " " << inst_err.first.rot.pitch << " " << inst_err.first.rot.yaw );
+                    << inst_err.trans.x << " " << inst_err.trans.y << " " << inst_err.trans.z << " " 
+                    << inst_err.rot.roll << " " << inst_err.rot.pitch << " " << inst_err.rot.yaw );
 
-    err_tf_map[agent_id][scene_id].push_back(inst_err);
+    err_map[agent_id][scene_id].push_back(inst_err);
 
     std_srvs::SetBool srv;
     if(!data_provider_client.call(srv))
@@ -86,7 +91,7 @@ tf::Transform evaluator::fromMsg(geometry_msgs::TransformStamped received_result
     return trans;
 }
 
-err_tf_pair evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
+genericT evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pred)
 {
     genericT err, result_tf;
     tf::Vector3 gt_translation = tf_gt.getOrigin();
@@ -107,19 +112,19 @@ err_tf_pair evaluator::compError(tf::StampedTransform tf_gt, tf::Transform tf_pr
     err.rot.pitch = getCircularDiff(gt_pitch, pred_pitch);
     err.rot.yaw = getCircularDiff(gt_yaw, pred_yaw);
 
-    result_tf.trans.x = pred_translation.getX() ; 
-    result_tf.trans.y = pred_translation.getY() ; 
-    result_tf.trans.z = pred_translation.getZ() ; 
-    result_tf.rot.roll = (float)pred_roll ;
-    result_tf.rot.pitch = (float)pred_pitch ;
-    result_tf.rot.yaw = (float)pred_yaw ;
-
-    return std::make_pair(err, result_tf);
+    // if result tf wanted to be converted to custom tyep
+    // result_tf.trans.x = pred_translation.getX() ; 
+    // result_tf.trans.y = pred_translation.getY() ; 
+    // result_tf.trans.z = pred_translation.getZ() ; 
+    // result_tf.rot.roll = (float)pred_roll ;
+    // result_tf.rot.pitch = (float)pred_pitch ;
+    // result_tf.rot.yaw = (float)pred_yaw ;
+    return err;
 }
 
 void evaluator::compStats()
 {
-    for (const auto &agent_scenePair : err_tf_map ) // agent_scenePair : std::pair< std::string, std::map<std::string, std::vector<err_tf_pair> > >
+    for (const auto &agent_scenePair : err_map ) // agent_scenePair : std::pair< std::string, std::map<std::string, std::vector<genericT> > >
     {
         std::string cur_agent = agent_scenePair.first;
         genericT agent_err;
@@ -129,21 +134,15 @@ void evaluator::compStats()
             genericT cum_scene_err;
             for (const auto &err_of_pcd_comb : pcd_combs_from_scene.second)
             {
-                cum_scene_err += err_of_pcd_comb.first; // accumulate data in scene
-                // cum_scene_err_tf.second += err_tf_pair_of_pcd.second; 
+                cum_scene_err += err_of_pcd_comb; // accumulate data in scene
             }
             agent_err.accumulate(cum_scene_err) ; // accumulate scenes' data into agent based stat container
 
-            // agent_err_tf.second += cum_scene_err.second; 
             statStore[cur_agent][cur_scene].mean = cum_scene_err.getMean(); // calculate scene's stats and store
             statStore[cur_agent][cur_scene].dev = cum_scene_err.getStDev();
-            // statStore[cur_agent][cur_scene].tf.mean = cum_scene_err_tf.second.getMean();
-            // statStore[cur_agent][cur_scene].tf.dev = cum_scene_err_tf.second.getStDev();
         }
         agent_stats[cur_agent].mean = agent_err.getMean();
         agent_stats[cur_agent].dev = agent_err.getStDev();
-        // agent_stats[cur_agent].tf.mean = agent_err_tf.second.getMean(); //calculate agent stats from accumulated data
-        // agent_stats[cur_agent].tf.dev = agent_err_tf.second.getStDev();
     }
 }
 
@@ -154,7 +153,7 @@ bool evaluator::isNormalized(tf::Quaternion q)
 
 void evaluator::dumpStats()
 {
-    for (const auto &agent_scenePair : statStore ) // agent_scenePair : std::pair< std::string, std::map<std::string, std::vector<err_tf_pair> > >
+    for (const auto &agent_scenePair : statStore ) // agent_scenePair : std::pair< std::string, std::map<std::string, std::vector<statType> > >
     {
         std::string cur_agent = agent_scenePair.first;
 
@@ -176,15 +175,4 @@ evaluator::evaluator()
     ros::NodeHandle private_nh("~");
     service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
     data_provider_client = private_nh.serviceClient<std_srvs::SetBool>("/data_provider_node/provide_pc_data");
-}
-
-
-int main(int argc, char** argv)
-{
-    ros::init(argc, argv, "evaluator");
-    evaluator app;
-
-    ros::spin();
-
-    return 0;
 }

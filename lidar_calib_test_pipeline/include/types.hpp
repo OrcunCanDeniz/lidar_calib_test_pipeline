@@ -201,9 +201,6 @@ struct genericT
         rot.cos_pitch += a.rot.cos_pitch; 
         rot.sin_yaw += a.rot.sin_yaw; 
         rot.cos_yaw += a.rot.cos_yaw; 
-        rot.roll += a.rot.roll; 
-        rot.pitch += a.rot.pitch; 
-        rot.yaw += a.rot.yaw; 
 
         add_count += a.add_count;
 
@@ -231,17 +228,8 @@ struct genericT
     }
 };
 
-// First object of this pair will hold error, second one will hold the transform that the error was calculated from
-typedef std::pair<genericT, genericT> err_tf_pair;
-
 struct statType 
 {
     genericT mean;
     genericT dev;
-};
-
-struct stats 
-{    
-    statType tf;
-    statType err;
 };
