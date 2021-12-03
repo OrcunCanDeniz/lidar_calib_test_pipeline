@@ -14,13 +14,9 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
     tf::StampedTransform gt_tf = getGTTF(parent_frame, child_frame);
     tf::Transform result_tf = fromMsg(req.transform);
     err_tf_pair inst_err = compError(gt_tf, result_tf); // calculate error between "GT_TF" and "result_tf" 
-    ROS_INFO_STREAM( "Transform Error: " << 
-                        inst_err.first.trans.x << " " <<
-                        inst_err.first.trans.y << " " <<
-                        inst_err.first.trans.z << " " << 
-                        inst_err.first.rot.roll << " " <<
-                        inst_err.first.rot.pitch << " " <<
-                        inst_err.first.rot.yaw );
+    ROS_INFO_STREAM( "Transform Error: "  
+                    << inst_err.first.trans.x << " " << inst_err.first.trans.y << " " << inst_err.first.trans.z << " " 
+                    << inst_err.first.rot.roll << " " << inst_err.first.rot.pitch << " " << inst_err.first.rot.yaw );
 
     err_tf_map[agent_id][scene_id].push_back(inst_err);
 
@@ -30,10 +26,9 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
         end_of_dataset = true; // returns false when dataset is finished 
         ROS_WARN_STREAM(module_name << "End of dataset! Calculating statistics ... ");
         compStats();
-        ROS_INFO("Writing stats ...");
         dumpStats();
-        ROS_INFO("Exiting.");
-        ros::shutdown();
+        res.ret = false;
+        return false;
     }  
 
     res.ret = true;

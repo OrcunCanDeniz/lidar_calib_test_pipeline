@@ -1,5 +1,7 @@
+#pragma once
 #include "io_utils.hpp"
 #include <ros/package.h>
+#include "ros/ros.h"
 
 namespace io_utils
 {
@@ -56,8 +58,10 @@ namespace io_utils
     void writeCsv()
     {
         std::string filename = "TEST_" + stamp() + ".csv"; // set file name as date-time. place it to home dir
-        std::string path = ros::package::getPath("lidar_calib_test_pipeline");
-        std::ofstream csv_file(path + "/test_runs/" + filename); // create file on disk
+        std::string pkg_path = ros::package::getPath("lidar_calib_test_pipeline");
+        std::string save_dir = pkg_path + "/test_runs/" + filename;
+        std::ofstream csv_file( save_dir ); // create file on disk
+        ROS_INFO_STREAM("Dumping stats to: " << save_dir);
         csv_file << stats_csv.str(); // dump stats in file
         csv_file.close(); // Close the file
     }
