@@ -3,3 +3,5 @@
 trials/
 *.png
 **/build/**
+*.code-workspace
+test_runs/*

@@ -1,13 +1,12 @@
 #include "io_utils.hpp"
-
+#include <ros/package.h>
 
 namespace io_utils
 {
     void prettyPrint(std::string agent_name, statType stat)
     {
         std::stringstream line_st;
-        std::cout << "###########   "  
-        << "Results for Agent: " << agent_name << "   ########### " << "\n"
+        std::cout << "\n########   "<< "Results for Agent: " << agent_name << "   ######## " << "\n"
         << "    Translation Error XYZ(mean): "<<stat.mean.trans.x<<", "<<stat.mean.trans.y<<", "<<stat.mean.trans.z<<", "<< std::endl
         << "    Rotation Error RPY(mean): "<<stat.mean.rot.roll<<", "<<stat.mean.rot.pitch<<", "<<stat.mean.rot.yaw<<", "<< std::endl
         << "    Stdev Translation Error XYZ: "<<stat.dev.trans.x<<", "<<stat.dev.trans.y<<", "<<stat.dev.trans.z<<", "<< std::endl
@@ -56,8 +55,9 @@ namespace io_utils
 
     void writeCsv()
     {
-        std::string filename = "~/TEST_" + stamp() + ".csv"; // set file name as date-time. place it to home dir
-        std::ofstream csv_file(filename); // create file on disk
+        std::string filename = "TEST_" + stamp() + ".csv"; // set file name as date-time. place it to home dir
+        std::string path = ros::package::getPath("lidar_calib_test_pipeline");
+        std::ofstream csv_file(path + "/test_runs/" + filename); // create file on disk
         csv_file << stats_csv.str(); // dump stats in file
         csv_file.close(); // Close the file
     }

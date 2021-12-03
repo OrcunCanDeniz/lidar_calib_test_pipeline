@@ -120,7 +120,7 @@ namespace data_provider
     {
         if (!paths_ready) ROS_ERROR("NO CALIBRATION FILES KNOWN TO EXTRINSICS MANAGER !");
 
-        if (DEBUG) ROS_INFO_STREAM(module_name << "######### GOING FOR NEXT AGENT'S CALIBRATIONS ########");
+        if (DEBUG) ROS_INFO_STREAM(module_name << "###### GETTING NEXT AGENT'S CALIBRATIONS ######");
         if (DEBUG) ROS_INFO_STREAM(module_name << "Caching -> " << all_agents[agent_idx]);
         gt_transforms_cache.clear(); // clear tf data from another agent
         initial_transforms_cache.clear();
@@ -136,7 +136,7 @@ namespace data_provider
         }
 
         bool one_more_iter = updateIdx();
-        if (DEBUG) ROS_INFO_STREAM(module_name << "######################################################");
+        if (DEBUG) ROS_INFO_STREAM(module_name << "##########################");
 
         return one_more_iter;
     }

@@ -32,6 +32,8 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
         compStats();
         ROS_INFO("Writing stats ...");
         dumpStats();
+        ROS_INFO("Exiting.");
+        ros::shutdown();
     }  
 
     res.ret = true;
