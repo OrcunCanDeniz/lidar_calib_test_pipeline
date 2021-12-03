@@ -24,9 +24,7 @@ namespace io_utils
     {
         std::stringstream line_st;
         line_st<<stat.mean.trans.x<<","<<stat.mean.trans.y<<","<<stat.mean.trans.z<<","
-        <<stat.mean.rot.roll<<","<<stat.mean.rot.pitch<<","<<stat.mean.rot.yaw<<","
-        <<stat.dev.trans.x<<","<<stat.dev.trans.y<<","<<stat.dev.trans.z<<","
-        <<stat.dev.rot.roll<<","<<stat.dev.rot.pitch<<","<<stat.dev.rot.yaw<<","<< std::endl;
+        <<stat.mean.rot.roll<<","<<stat.mean.rot.pitch<<","<<stat.mean.rot.yaw<< std::endl;
 
         return line_st;
     }
@@ -60,12 +58,16 @@ namespace io_utils
 
     void writeCsv()
     {
+        std::stringstream columns;
+        columns << "agent_id,scene_id,tx_err,ty_err,tz_err,R_err,P_err,Y_err\n";
+
         std::string filename = "TEST_" + stamp() + ".csv"; // set file name as date-time. place it to home dir
         std::string pkg_path = ros::package::getPath("lidar_calib_test_pipeline");
         std::string save_dir = pkg_path + "/test_runs/" + filename;
         std::ofstream csv_file( save_dir ); // create file on disk
         ROS_INFO_STREAM("\nDumping stats to: " << save_dir);
-        csv_file << stats_csv.str(); // dump stats in file
+        columns << stats_csv.str();
+        csv_file << columns.str(); // dump stats in file
         csv_file.close(); // Close the file
     }
 } // namespace
