@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="dataset_dir" default="$(env HOME)/registration_dataset/"/>
+    <node pkg="lidar_calib_test_pipeline" type="data_handling_server" name="data_handling_server">
+        <param name="dataset_dir" value="$(arg dataset_dir)"/>
+    </node>
+</launch>
