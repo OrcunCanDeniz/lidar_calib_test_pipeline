@@ -7,9 +7,7 @@ namespace data_provider
     namespace fs = std::experimental::filesystem;
 
     extrinsics_manager::extrinsics_manager():paths_ready(0),agent_idx{0}, last_set_processed{false}
-    {
-        ROS_WARN("No paths provided for extrinsic parameters !");
-    }
+    {}
 
     void extrinsics_manager::setPaths(std::vector<std::string> agent_paths)
     // input: vector<string> : paths to agents 
