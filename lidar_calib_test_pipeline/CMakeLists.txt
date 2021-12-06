@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(yaml-cpp REQUIRED)
+find_package(Eigen3 QUIET)
 find_package(PCL 1.7 REQUIRED common io visualization )
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -70,7 +71,19 @@ target_link_libraries(evaluator
 add_executable(calibrator src/dummy_calibrator.cpp)
 target_link_libraries(calibrator
   ${catkin_LIBRARIES}
-  )
+)
+
+add_library(interface src/bridge/interface.cpp)
+add_executable(interface_test src/bridge/interface_test.cpp)
+target_link_libraries(interface_test 
+  interface
+  ${catkin_LIBRARIES}
+)
+
+# add_executable(interface src/interface.cpp)
+# target_link_libraries(interface 
+#   ${catkin_LIBRARIES}
+# )
 #############
 ## Install ##
 #############

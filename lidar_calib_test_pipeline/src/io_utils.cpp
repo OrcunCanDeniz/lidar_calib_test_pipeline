@@ -4,8 +4,6 @@
 #include "ros/ros.h"
 
 
-// TODO: Add title row to result csv
-
 namespace io_utils
 {
     void prettyPrint(std::string agent_name, statType stat)
