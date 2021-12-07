@@ -32,11 +32,8 @@ void calib_test_bridge::fromTestMsg(const test_comm::test_pointcloud::ConstPtr p
 void calib_test_bridge::toEvalSrv(Eigen::Matrix4f guess)
 {
     Eigen::Matrix3f rot_mat = guess.block(0,0,3,3);
+    Eigen::Quaternionf q(rot_mat);
     Eigen::Vector3f translation_vector = guess.block(0,3,3,1);
-
-    test_comm::calib_result srv;
-    srv.request.agent = agent_id;
-    srv.request.agent = scene_id;
 
     geometry_msgs::TransformStamped tf;
     tf.child_frame_id = child_frame;
@@ -46,11 +43,18 @@ void calib_test_bridge::toEvalSrv(Eigen::Matrix4f guess)
     tf.transform.translation.y = translation_vector(1);
     tf.transform.translation.z = translation_vector(2);
 
-    Eigen::Quaternionf q(rot_mat);
+    tf.transform.rotation.w = q.w();
+    tf.transform.rotation.x = q.x();
+    tf.transform.rotation.y = q.y();
+    tf.transform.rotation.z = q.z();
 
- // TODO: from rotation matrix to quaternion
-
+    test_comm::calib_result srv;
+    srv.request.agent = agent_id;
+    srv.request.agent = scene_id;
     
+    srv.request.transform = tf;
+
+    error_service_client.call(srv);
 }
 
 
