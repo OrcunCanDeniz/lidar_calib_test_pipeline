@@ -31,7 +31,7 @@ void calib_test_bridge::fromTestMsg(const test_comm::test_pointcloud::ConstPtr p
 
 void calib_test_bridge::toEvalSrv(Eigen::Matrix4f guess)
 {
-    Eigen::Matrix3f rotation_matrix = guess.block(0,0,3,3);
+    Eigen::Matrix3f rot_mat = guess.block(0,0,3,3);
     Eigen::Vector3f translation_vector = guess.block(0,3,3,1);
 
     test_comm::calib_result srv;
@@ -45,6 +45,8 @@ void calib_test_bridge::toEvalSrv(Eigen::Matrix4f guess)
     tf.transform.translation.x = translation_vector(0);
     tf.transform.translation.y = translation_vector(1);
     tf.transform.translation.z = translation_vector(2);
+
+    Eigen::Quaternionf q(rot_mat);
 
  // TODO: from rotation matrix to quaternion
 

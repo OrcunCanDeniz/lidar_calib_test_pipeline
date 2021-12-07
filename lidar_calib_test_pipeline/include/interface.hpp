@@ -13,6 +13,7 @@
 #include <message_filters/time_synchronizer.h>
 
 #include "Eigen/Core"
+#include <Eigen/Geometry> 
 
 #include <string>
 #include <vector>
