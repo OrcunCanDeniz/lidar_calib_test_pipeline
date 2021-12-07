@@ -22,22 +22,23 @@
 
 namespace test_comm = lidar_calib_test_comms;
 
-
 class calib_test_bridge
 {
     public:
-        calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *private_nh_, 
-                boost::function<void(const sensor_msgs::PointCloud2::ConstPtr, const sensor_msgs::PointCloud2::ConstPtr)> calibrator_f);
+        template<typename F>
+        calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *private_nh_, F callback);
         calib_test_bridge();
         void fromTestMsg(const test_comm::test_pointcloud::ConstPtr parent_test_pc, const test_comm::test_pointcloud::ConstPtr child_test_pc);
         lidar_calib_test_comms::calib_result toTestReq();
-        //void toEvalSrv(Eigen::Matrix4f transform);
+        void toEvalSrv(Eigen::Matrix4f guess);
         std::string getAgent();
         std::string getScene();
 
 
     private:
         std::string scene_id, agent_id;
+        std::string parent_frame, child_frame;
+
         // boost::function<void (const sensor_msgs::PointCloud2::ConstPtr&, const sensor_msgs::PointCloud2::ConstPtr&)> native_calibrator_func;
         boost::function<void (const sensor_msgs::PointCloud2::ConstPtr, const sensor_msgs::PointCloud2::ConstPtr)> native_calibrator_func;
 
@@ -48,3 +49,17 @@ class calib_test_bridge
         message_filters::Subscriber<lidar_calib_test_comms::test_pointcloud> *child_sub;
         message_filters::Synchronizer<SyncPolicyT> *pc_sync_;
 };
+
+template<typename F>
+calib_test_bridge::calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *private_nh_, 
+                    F callback): native_calibrator_func(callback)
+{
+    // native_calibrator_func = calibrator_f;
+
+    error_service_client = private_nh_->serviceClient<lidar_calib_test_comms::calib_result>("/evaluator/calculate_error");
+
+    parent_sub = new message_filters::Subscriber<lidar_calib_test_comms::test_pointcloud>(*nh_, "parent/pointcloud", 1);
+    child_sub = new message_filters::Subscriber<lidar_calib_test_comms::test_pointcloud>(*nh_, "child/pointcloud", 1);
+    pc_sync_ = new message_filters::Synchronizer<SyncPolicyT>(SyncPolicyT(10), *child_sub, *parent_sub);
+    pc_sync_->registerCallback(boost::bind(&calib_test_bridge::fromTestMsg, this, _1, _2));
+}
