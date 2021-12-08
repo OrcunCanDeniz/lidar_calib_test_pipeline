@@ -26,6 +26,7 @@ bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_
     err_map[agent_id][scene_id].push_back(inst_err);
 
     std_srvs::SetBool srv;
+    srv.request.data = true;
     if(!data_provider_client.call(srv))
     {
         end_of_dataset = true; // returns false when dataset is finished 
@@ -174,5 +175,5 @@ evaluator::evaluator()
 {
     ros::NodeHandle private_nh("~");
     service = private_nh.advertiseService("calculate_error", &evaluator::serve, this);
-    data_provider_client = private_nh.serviceClient<std_srvs::SetBool>("/data_provider_node/provide_pc_data");
+    data_provider_client = private_nh.serviceClient<std_srvs::SetBool>("/data_handling_server/provide_pc_data");
 }

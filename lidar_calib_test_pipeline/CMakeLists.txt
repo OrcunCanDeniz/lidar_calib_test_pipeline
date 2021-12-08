@@ -67,19 +67,6 @@ target_link_libraries(evaluator
   ${catkin_LIBRARIES}
 )
 
-## build dummy calibrator
-add_executable(calibrator src/dummy_calibrator.cpp)
-target_link_libraries(calibrator
-  ${catkin_LIBRARIES}
-)
-
-add_library(interface src/bridge/interface.cpp)
-add_executable(interface_test src/bridge/interface_test.cpp  src/bridge/interface.cpp)
-target_link_libraries(interface_test 
-  interface
-  ${catkin_LIBRARIES}
-)
-
 
 install(TARGETS data_handling_server
 ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

@@ -32,6 +32,7 @@ class calib_test_bridge
         void fromTestMsg(const test_comm::test_pointcloud::ConstPtr parent_test_pc, const test_comm::test_pointcloud::ConstPtr child_test_pc);
         lidar_calib_test_comms::calib_result toTestReq();
         void toEvalSrv(Eigen::Matrix4f guess);
+        void toEvalSrv(geometry_msgs::TransformStamped tf);
         std::string getAgent();
         std::string getScene();
 
@@ -40,7 +41,6 @@ class calib_test_bridge
         std::string scene_id, agent_id;
         std::string parent_frame, child_frame;
 
-        // boost::function<void (const sensor_msgs::PointCloud2::ConstPtr&, const sensor_msgs::PointCloud2::ConstPtr&)> native_calibrator_func;
         boost::function<void (const sensor_msgs::PointCloud2::ConstPtr, const sensor_msgs::PointCloud2::ConstPtr)> native_calibrator_func;
 
         ros::ServiceClient error_service_client;
@@ -55,8 +55,6 @@ template<typename F>
 calib_test_bridge::calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *private_nh_, 
                     F callback): native_calibrator_func(callback)
 {
-    // native_calibrator_func = calibrator_f;
-
     error_service_client = private_nh_->serviceClient<lidar_calib_test_comms::calib_result>("/evaluator/calculate_error");
 
     parent_sub = new message_filters::Subscriber<lidar_calib_test_comms::test_pointcloud>(*nh_, "parent/pointcloud", 1);

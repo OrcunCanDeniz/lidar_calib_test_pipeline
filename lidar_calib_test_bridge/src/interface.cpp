@@ -1,4 +1,4 @@
-#include "interface.hpp"
+#include "lidar_calib_test_bridge/interface.hpp"
 
 
 calib_test_bridge::calib_test_bridge()
@@ -50,13 +50,27 @@ void calib_test_bridge::toEvalSrv(Eigen::Matrix4f guess)
 
     test_comm::calib_result srv;
     srv.request.agent = agent_id;
-    srv.request.agent = scene_id;
-    
+    srv.request.scene = scene_id;
+
+    tf.header.stamp = ros::Time::now();    
     srv.request.transform = tf;
 
     error_service_client.call(srv);
 }
 
+void calib_test_bridge::toEvalSrv(geometry_msgs::TransformStamped tf)
+{
+    tf.child_frame_id = child_frame;
+    tf.header.frame_id= parent_frame;
+
+    test_comm::calib_result srv;
+    srv.request.agent = agent_id;
+    srv.request.scene = scene_id;
+    
+    srv.request.transform = tf;
+
+    error_service_client.call(srv);
+}
 
 std::string calib_test_bridge::getAgent()
 {
