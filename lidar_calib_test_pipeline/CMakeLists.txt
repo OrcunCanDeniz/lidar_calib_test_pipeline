@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(yaml-cpp REQUIRED)
 find_package(Eigen3 QUIET)
-find_package(PCL 1.7 REQUIRED common io visualization )
+find_package(PCL 1.7 REQUIRED common io )
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
@@ -25,7 +25,7 @@ add_definitions(${PCL_DEFINITIONS})
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES data_handler_srv
- CATKIN_DEPENDS message_runtime  pcl_conversions pcl_ros roscpp sensor_msgs std_msgs message_runtime
+ CATKIN_DEPENDS message_runtime  pcl_conversions pcl_ros roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 

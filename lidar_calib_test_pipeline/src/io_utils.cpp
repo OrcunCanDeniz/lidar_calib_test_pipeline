@@ -1,4 +1,3 @@
-#pragma once
 #include "io_utils.hpp"
 #include <ros/package.h>
 #include "ros/ros.h"

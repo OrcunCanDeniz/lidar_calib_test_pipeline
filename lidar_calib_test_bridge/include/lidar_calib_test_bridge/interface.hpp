@@ -59,6 +59,6 @@ calib_test_bridge::calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *priv
 
     parent_sub = new message_filters::Subscriber<lidar_calib_test_comms::test_pointcloud>(*nh_, "parent/pointcloud", 1);
     child_sub = new message_filters::Subscriber<lidar_calib_test_comms::test_pointcloud>(*nh_, "child/pointcloud", 1);
-    pc_sync_ = new message_filters::Synchronizer<SyncPolicyT>(SyncPolicyT(10), *child_sub, *parent_sub);
+    pc_sync_ = new message_filters::Synchronizer<SyncPolicyT>(SyncPolicyT(10), *parent_sub, *child_sub);
     pc_sync_->registerCallback(boost::bind(&calib_test_bridge::fromTestMsg, this, _1, _2));
 }
