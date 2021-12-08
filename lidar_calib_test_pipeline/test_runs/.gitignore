@@ -1,6 +1,5 @@
 # This file is created to keep this empty directory in repo.
 # Directory this file's in is intentionally left empty.
 # Ignore everything in this directory
-*
-# Except this file
-!.gitignore
+*.csv
+/.ipynb_checkpoints
