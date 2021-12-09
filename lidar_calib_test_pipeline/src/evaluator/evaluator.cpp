@@ -1,12 +1,7 @@
 #include "evaluator.hpp"
 
-/// Stats to be computed;
-//          - std_dev of transform errors
-//          - mean of transform errors
-
 
 bool evaluator::serve(lidar_calib_test_comms::calib_result::Request &req, lidar_calib_test_comms::calib_result::Response &res)   
-// input parameter is tf_eval_srv: result_tf
 {
     if (end_of_dataset) return false;
 
@@ -136,8 +131,9 @@ void evaluator::compStats()
             for (const auto &err_of_pcd_comb : pcd_combs_from_scene.second)
             {
                 cum_scene_err += err_of_pcd_comb; // accumulate data in scene
+                agent_err += err_of_pcd_comb;
+                io_utils::addStat(cur_agent, cur_scene, err_of_pcd_comb);
             }
-            agent_err.accumulate(cum_scene_err) ; // accumulate scenes' data into agent based stat container
 
             statStore[cur_agent][cur_scene].mean = cum_scene_err.getMean(); // calculate scene's stats and store
             statStore[cur_agent][cur_scene].dev = cum_scene_err.getStDev();
@@ -157,17 +153,8 @@ void evaluator::dumpStats()
     for (const auto &agent_scenePair : statStore ) // agent_scenePair : std::pair< std::string, std::map<std::string, std::vector<statType> > >
     {
         std::string cur_agent = agent_scenePair.first;
-
-        for (const auto &scene_stat : agent_scenePair.second ) 
-        {
-            std::string cur_scene = scene_stat.first;
-            io_utils::addStat(cur_agent, cur_scene, scene_stat.second);
-        }
-
         io_utils::prettyPrint(cur_agent, agent_stats[cur_agent]);  
-     
     }
-
     io_utils::writeCsv();
 }
 

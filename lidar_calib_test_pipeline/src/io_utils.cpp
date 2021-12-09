@@ -26,7 +26,25 @@ namespace io_utils
         return line_st;
     }
 
+    std::stringstream stat2Stream(genericT stat)
+    {
+        std::stringstream line_st;
+        line_st<<stat.trans.x<<","<<stat.trans.y<<","<<stat.trans.z<<","
+        <<stat.rot.roll<<","<<stat.rot.pitch<<","<<stat.rot.yaw<< std::endl;
 
+        return line_st;
+    }
+
+
+    void addStat(std::string agent, std::string scene, genericT stat)
+    {
+        std::stringstream stream_from_stat = stat2Stream(stat);
+        std::stringstream line_st;
+
+        line_st<<agent<<","<<scene<<","<<stream_from_stat.str();
+
+        stats_csv << line_st.str();
+    }
 
     void addStat(std::string agent, std::string scene, statType stat)
     {

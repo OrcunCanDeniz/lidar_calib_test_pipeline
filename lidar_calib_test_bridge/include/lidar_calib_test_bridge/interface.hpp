@@ -23,12 +23,12 @@
 
 namespace test_comm = lidar_calib_test_comms;
 
-class calib_test_bridge
+class lidar_calib_test_bridge
 {
     public:
         template<typename F>
-        calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *private_nh_, F callback);
-        calib_test_bridge();
+        lidar_calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *private_nh_, F callback);
+        lidar_calib_test_bridge();
         void fromTestMsg(const test_comm::test_pointcloud::ConstPtr parent_test_pc, const test_comm::test_pointcloud::ConstPtr child_test_pc);
         lidar_calib_test_comms::calib_result toTestReq();
         void toEvalSrv(Eigen::Matrix4f guess);
@@ -52,7 +52,7 @@ class calib_test_bridge
 };
 
 template<typename F>
-calib_test_bridge::calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *private_nh_, 
+lidar_calib_test_bridge::lidar_calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *private_nh_, 
                     F callback): native_calibrator_func(callback)
 {
     error_service_client = private_nh_->serviceClient<lidar_calib_test_comms::calib_result>("/evaluator/calculate_error");
@@ -60,5 +60,5 @@ calib_test_bridge::calib_test_bridge(ros::NodeHandle *nh_, ros::NodeHandle *priv
     parent_sub = new message_filters::Subscriber<lidar_calib_test_comms::test_pointcloud>(*nh_, "parent/pointcloud", 1);
     child_sub = new message_filters::Subscriber<lidar_calib_test_comms::test_pointcloud>(*nh_, "child/pointcloud", 1);
     pc_sync_ = new message_filters::Synchronizer<SyncPolicyT>(SyncPolicyT(10), *parent_sub, *child_sub);
-    pc_sync_->registerCallback(boost::bind(&calib_test_bridge::fromTestMsg, this, _1, _2));
+    pc_sync_->registerCallback(boost::bind(&lidar_calib_test_bridge::fromTestMsg, this, _1, _2));
 }

@@ -1,10 +1,10 @@
 #include "lidar_calib_test_bridge/interface.hpp"
 
 
-calib_test_bridge::calib_test_bridge()
+lidar_calib_test_bridge::lidar_calib_test_bridge()
 {}
 
-void calib_test_bridge::fromTestMsg(const test_comm::test_pointcloud::ConstPtr parent_test_pc, const test_comm::test_pointcloud::ConstPtr child_test_pc)
+void lidar_calib_test_bridge::fromTestMsg(const test_comm::test_pointcloud::ConstPtr parent_test_pc, const test_comm::test_pointcloud::ConstPtr child_test_pc)
 {
     sensor_msgs::PointCloud2* parent_pc = new sensor_msgs::PointCloud2; 
     sensor_msgs::PointCloud2* child_pc = new sensor_msgs::PointCloud2;
@@ -28,7 +28,7 @@ void calib_test_bridge::fromTestMsg(const test_comm::test_pointcloud::ConstPtr p
     native_calibrator_func(parent_pc_ptr, child_pc_ptr);
 }
 
-void calib_test_bridge::toEvalSrv(Eigen::Matrix4f guess)
+void lidar_calib_test_bridge::toEvalSrv(Eigen::Matrix4f guess)
 {
     Eigen::Matrix3f rot_mat = guess.block(0,0,3,3);
     Eigen::Quaternionf q(rot_mat);
@@ -57,7 +57,7 @@ void calib_test_bridge::toEvalSrv(Eigen::Matrix4f guess)
     error_service_client.call(srv);
 }
 
-void calib_test_bridge::toEvalSrv(geometry_msgs::TransformStamped tf)
+void lidar_calib_test_bridge::toEvalSrv(geometry_msgs::TransformStamped tf)
 {
     tf.child_frame_id = child_frame;
     tf.header.frame_id= parent_frame;
@@ -71,12 +71,12 @@ void calib_test_bridge::toEvalSrv(geometry_msgs::TransformStamped tf)
     error_service_client.call(srv);
 }
 
-std::string calib_test_bridge::getAgent()
+std::string lidar_calib_test_bridge::getAgent()
 {
     return agent_id;
 }
 
-std::string calib_test_bridge::getScene()
+std::string lidar_calib_test_bridge::getScene()
 {
     return scene_id;
 }
