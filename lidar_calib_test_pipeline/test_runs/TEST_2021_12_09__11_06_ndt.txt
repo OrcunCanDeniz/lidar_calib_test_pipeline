@@ -1,5 +1,0 @@
-########   Results for Agent: ford_v2   ######## 
-    Translation Error XYZ(mean): 0.667717, 1.34311, 0.506301, 
-    Rotation Error RPY(mean): 0.180455, 0.208078, 0.120861, 
-    Stdev Translation Error XYZ: 0.433265, 0.588595, 0.727679, 
-    Stdev Rotation Error RPY: 0.215245, 0.219387, 0.170665

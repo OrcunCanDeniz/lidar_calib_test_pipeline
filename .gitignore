@@ -1,8 +1,8 @@
 .vscode/
-*.py
 trials/
 *.png
 **/build/**
 *.code-workspace
 test_runs/*
 build/
+*.ipynb
