@@ -2,9 +2,7 @@
 
 
 calib_test_bridge::calib_test_bridge()
-{
-    std::cout<< "empty const" << std::endl;
-}
+{}
 
 void calib_test_bridge::fromTestMsg(const test_comm::test_pointcloud::ConstPtr parent_test_pc, const test_comm::test_pointcloud::ConstPtr child_test_pc)
 {
@@ -27,8 +25,6 @@ void calib_test_bridge::fromTestMsg(const test_comm::test_pointcloud::ConstPtr p
 
     const sensor_msgs::PointCloud2::ConstPtr parent_pc_ptr(parent_pc), child_pc_ptr(child_pc);
 
-    std::cout<<parent_pc_ptr->header.frame_id<<std::endl;
-    std::cout<<child_pc_ptr->header.frame_id<<std::endl;
     native_calibrator_func(parent_pc_ptr, child_pc_ptr);
 }
 
