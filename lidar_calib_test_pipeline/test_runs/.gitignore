@@ -3,3 +3,4 @@
 # Ignore everything in this directory
 *.csv
 /.ipynb_checkpoints
+*.txt
