@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <arg name="parent_lidar" default="parent"/>
+    <arg name="child_lidar" default="front_right"/>
+
+    <arg name="voxel_size" value="0.1" />
+    <arg name="ndt_epsilon" value="0.001" />
+    <arg name="ndt_step_size" value="0.1" />
+    <arg name="ndt_resolution" value="0.7" />
+    <arg name="ndt_iterations" value="40" />
+
+
+    <arg name="x" value="0" />
+    <arg name="y" value="0" />
+    <arg name="z" value="0" />
+    <arg name="roll" value="0" />
+    <arg name="pitch" value="0" />
+    <arg name="yaw" value="0" />
+
+    <arg name="downsample_child_points" default="true"/>
+    <arg name="downsample_parent_points" default="true"/>
+
+
+    <!-- <include file="$(env HOME)/flowride.launcher/Main.Config/Calibrations/Extrinsics/tf.launch" /> -->
+
+    <!-- PointCloud Crop Mesurement Range -->
+    <!-- <node pkg="nodelet" type="nodelet" name="crop_box_filter_parent" args="standalone pointcloud_preprocessor/crop_box_filter_nodelet" respawn="True">
+        <remap from="~input" to="/lidar/$(arg parent_lidar)/points_raw" />
+        <remap from="~output" to="/lidar/$(arg parent_lidar)/points_raw_cropped" />
+        <rosparam>
+            min_x: -40.0
+            max_x: 50.0
+            min_y: -30.0
+            max_y: 30.0
+            min_z: -5
+            max_z: 3.5
+            negative: False
+        </rosparam>
+
+        <param name="negative" value="False" />
+        <param name="input_frame" value="base_link" />
+        <param name="output_frame" value="/lidar/$(arg parent_lidar)/os_sensor" />
+    </node> -->
+
+    <!-- <node pkg="topic_tools" type="relay" name="parent_relay" output="log" args="/lidar/$(arg parent_lidar)/points_raw_cropped /parent_calibrated"/> -->
+
+    <!-- PointCloud Crop Mesurement Range -->
+    <!-- <node pkg="nodelet" type="nodelet" name="crop_box_filter_child" args="standalone pointcloud_preprocessor/crop_box_filter_nodelet" respawn="True">
+        <remap from="~input" to="/lidar/$(arg child_lidar)/points_raw" />
+        <remap from="~output" to="/lidar/$(arg child_lidar)/points_raw_cropped" />
+        <rosparam>
+            min_x: -40.0
+            max_x: 50.0
+            min_y: -30.0
+            max_y: 30.0
+            min_z: -5
+            max_z: 3.5
+            negative: False
+        </rosparam>
+
+        <param name="negative" value="False" />
+        <param name="input_frame" value="base_link" />
+        <param name="output_frame" value="/lidar/$(arg child_lidar)/os_sensor" />
+    </node> -->
+
+    <node pkg="multi_lidar_calibrator" type="multi_lidar_calibrator" name="lidar_calibrator" output="screen">
+        <param name="points_parent_src" value="/lidar/$(arg parent_lidar)/points_raw_cropped" />
+        <param name="points_child_src" value="/lidar/$(arg child_lidar)/points_raw_cropped" />
+        <param name="voxel_size" value="$(arg voxel_size)" />
+        <param name="ndt_epsilon" value="$(arg ndt_epsilon)" />
+        <param name="ndt_step_size" value="$(arg ndt_step_size)" />
+        <param name="ndt_resolution" value="$(arg ndt_resolution)" />
+        <param name="ndt_iterations" value="$(arg ndt_iterations)" />
+        <param name="x" value="$(arg x)" />
+        <param name="y" value="$(arg y)" />
+        <param name="z" value="$(arg z)" />
+        <param name="roll" value="$(arg roll)" />
+        <param name="pitch" value="$(arg pitch)" />
+        <param name="yaw" value="$(arg yaw)" />
+        <param name="parent_frame" value="/lidar/$(arg parent_lidar)/os_sensor"/>
+        <param name="child_frame" value="/lidar/$(arg child_lidar)/os_sensor"/>
+        <param name="downsample_child_points" value="$(arg downsample_child_points)"/>
+        <param name="downsample_parent_points" value="$(arg downsample_parent_points)"/>
+
+    </node>
+    <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find multi_lidar_calibrator)/rviz/multi_lidar_calibrator.rviz" /> -->
+
+    <node pkg="rostopic"
+        type="rostopic"
+        name="sample_string_publisher"
+        args="pub -r 1 /calibration_helper_string std_msgs/String
+                ' ~ Please execute 2D Pose Estimation to reset the position to known transforms.'"/>
+    <node pkg="rostopic"
+        type="rostopic"
+        name="sample_string_publisher_lidars"
+        args="pub -r 1 /calibration_helper_string_lidars std_msgs/String
+                ' ~~ Calibrating $(arg child_lidar) with $(arg parent_lidar)'"/>
+
+
+    <!-- <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure"/> -->
+
+</launch>
