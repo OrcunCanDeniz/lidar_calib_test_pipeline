@@ -4,4 +4,8 @@
     <node pkg="lidar_calib_test_pipeline" type="data_handling_server" name="data_handling_server" output="screen">
         <param name="dataset_dir" value="$(arg dataset_dir)"/>
     </node>
+
+    <!-- <node pkg="lidar_calib_test_pipeline" type="evaluator" name="lidar_calib_test_evaluator">
+        
+    </node> -->
 </launch>
